@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iliya Valizadeh — Data Science</title>
+<meta name="description" content="Iliya Valizadeh. Data science student at York University. Credit risk modelling, data engineering, machine learning.">
+<meta property="og:title" content="Iliya Valizadeh — Data Science">
+<meta property="og:description" content="Third-year data science student at York University. Try the credit risk model running live on the page.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0B0E14">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230B0E14'/><text x='16' y='23' font-size='19' font-family='sans-serif' font-weight='700' fill='%23C8A96A' text-anchor='middle'>I</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0E14; --panel:#121826; --panel2:#0F1420;
+  --line:#1F2739; --gold:#C8A96A; --gold-dim:rgba(200,169,106,.16);
+  --text:#E9ECF1; --muted:#8A94A6; --white:#fff;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Sora',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-weight:300;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+
+/* ---------- nav ---------- */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blur(14px);
+    background:rgba(11,14,20,.72);border-bottom:1px solid transparent;transition:border-color .3s}
+nav.solid{border-color:var(--line)}
+.navin{max-width:1120px;margin:0 auto;padding:16px 28px;display:flex;justify-content:space-between;align-items:center}
+.brand{font-family:var(--mono);font-size:13px;letter-spacing:.14em;color:var(--gold)}
+.navlinks{display:flex;gap:30px;font-size:13.5px;color:var(--muted);letter-spacing:.04em}
+.navlinks a{transition:color .2s}
+.navlinks a:hover{color:var(--text)}
+@media(max-width:720px){.navlinks{display:none}}
+
+/* ---------- hero ---------- */
+header{position:relative;min-height:100svh;display:flex;align-items:center;overflow:hidden}
+#net{position:absolute;inset:0;width:100%;height:100%}
+header .wrap{position:relative;z-index:2}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.22em;color:var(--gold);
+        text-transform:uppercase;margin-bottom:26px;opacity:0;animation:up .8s .1s forwards}
+h1{font-size:clamp(2.9rem,8vw,5.6rem);font-weight:700;letter-spacing:-.035em;line-height:1.02;
+   opacity:0;animation:up .8s .22s forwards}
+h1 .g{color:var(--gold)}
+.lede{max-width:620px;margin-top:26px;font-size:clamp(1rem,2vw,1.2rem);color:var(--muted);
+      opacity:0;animation:up .8s .34s forwards}
+.herobtns{display:flex;gap:14px;margin-top:40px;flex-wrap:wrap;opacity:0;animation:up .8s .46s forwards}
+.btn{padding:13px 26px;border:1px solid var(--line);border-radius:2px;font-size:14px;
+     letter-spacing:.04em;transition:.25s;background:transparent}
+.btn:hover{border-color:var(--gold);color:var(--gold)}
+.btn.fill{background:var(--gold);border-color:var(--gold);color:#0B0E14;font-weight:600}
+.btn.fill:hover{background:transparent;color:var(--gold)}
+.scrollcue{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);z-index:2;
+           font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;color:var(--muted);opacity:.65}
+.scrollcue span{display:block;width:1px;height:34px;background:linear-gradient(var(--gold),transparent);margin:10px auto 0}
+@keyframes up{to{opacity:1;transform:translateY(0)}}
+.kicker,h1,.lede,.herobtns{transform:translateY(18px)}
+
+/* ---------- sections ---------- */
+section{padding:118px 0;position:relative;scroll-margin-top:70px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;color:var(--gold);
+         text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--line);max-width:180px}
+h2{font-size:clamp(1.8rem,4vw,2.7rem);font-weight:600;letter-spacing:-.02em;margin-bottom:16px}
+.sub{color:var(--muted);max-width:640px;margin-bottom:52px}
+
+/* ---------- lab ---------- */
+.lab{background:var(--panel);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.labhead{padding:15px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;
+         gap:10px;background:var(--panel2)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dot.on{background:var(--gold)}
+.labtitle{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.08em;margin-left:6px}
+.labgrid{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:900px){.labgrid{grid-template-columns:1fr}}
+.controls{padding:34px;border-right:1px solid var(--line)}
+@media(max-width:900px){.controls{border-right:none;border-bottom:1px solid var(--line)}}
+.ctl{margin-bottom:26px}
+.ctl:last-child{margin-bottom:0}
+.ctlhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px}
+.ctlname{font-size:13.5px;color:var(--text)}
+.ctlval{font-family:var(--mono);font-size:13px;color:var(--gold)}
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--line);outline:none;border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+  background:var(--gold);cursor:pointer;border:3px solid var(--bg);box-shadow:0 0 0 1px var(--gold);transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.22)}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--gold);
+  cursor:pointer;border:3px solid var(--bg);box-shadow:0 0 0 1px var(--gold)}
+
+.readout{padding:34px;display:flex;flex-direction:column}
+.gauge{position:relative;width:100%;max-width:250px;margin:0 auto 12px}
+.gaugelbl{position:absolute;top:56%;left:50%;transform:translate(-50%,-50%);text-align:center;width:100%}
+.pd{font-family:var(--mono);font-size:2.5rem;font-weight:500;color:var(--gold);line-height:1}
+.pdcap{font-size:10.5px;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-top:7px}
+.band{text-align:center;font-family:var(--mono);font-size:12.5px;letter-spacing:.11em;
+      text-transform:uppercase;padding:8px;border:1px solid var(--line);border-radius:2px;margin-bottom:26px}
+.contrib{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--muted);
+         text-transform:uppercase;margin-bottom:16px}
+.bar{margin-bottom:13px}
+.barhead{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
+.bartrack{height:4px;background:var(--panel2);border-radius:2px;position:relative;overflow:hidden}
+.barmid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line)}
+.barfill{position:absolute;top:0;bottom:0;border-radius:2px;transition:all .32s cubic-bezier(.4,0,.2,1)}
+.note{font-size:12px;color:var(--muted);margin-top:22px;padding-top:18px;border-top:1px solid var(--line);line-height:1.6}
+
+/* ---------- work ---------- */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:860px){.cards{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:34px;
+      transition:.3s;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;top:0;left:0;width:0;height:2px;background:var(--gold);transition:width .45s}
+.card:hover{border-color:#2C3550;transform:translateY(-3px)}
+.card:hover::before{width:100%}
+.cardno{font-family:var(--mono);font-size:11.5px;color:var(--gold);letter-spacing:.14em;margin-bottom:16px}
+.card h3{font-size:1.32rem;font-weight:600;margin-bottom:14px;letter-spacing:-.01em}
+.card p{color:var(--muted);font-size:14.5px;margin-bottom:20px}
+.tags{display:flex;flex-wrap:wrap;gap:7px}
+.tag{font-family:var(--mono);font-size:10.5px;padding:5px 10px;border:1px solid var(--line);
+     border-radius:2px;color:var(--muted);letter-spacing:.05em}
+
+/* ---------- stack ---------- */
+.stack{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:1px;
+       background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.si{background:var(--panel);padding:26px 22px;transition:background .25s}
+.si:hover{background:var(--panel2)}
+.si h4{font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:.15em;
+       text-transform:uppercase;margin-bottom:13px;font-weight:500}
+.si p{font-size:13.5px;color:var(--muted);line-height:1.85}
+
+/* ---------- about ---------- */
+.about{display:grid;grid-template-columns:1.35fr 1fr;gap:64px;align-items:start}
+@media(max-width:860px){.about{grid-template-columns:1fr;gap:40px}}
+.about p{margin-bottom:20px;color:var(--muted);font-size:15.5px}
+.about p strong{color:var(--text);font-weight:400}
+.facts{border-left:1px solid var(--line);padding-left:28px}
+.fact{margin-bottom:24px}
+.fact dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--gold);
+         text-transform:uppercase;margin-bottom:6px}
+.fact dd{font-size:14.5px;color:var(--text)}
+
+/* ---------- contact ---------- */
+#contact{border-top:1px solid var(--line);background:var(--panel2)}
+.clinks{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1px;
+        background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-top:14px}
+.cl{background:var(--panel);padding:28px;transition:.25s;display:block}
+.cl:hover{background:var(--panel2)}
+.cl .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--muted);
+       text-transform:uppercase;margin-bottom:9px}
+.cl .v{font-size:14.5px;color:var(--text);word-break:break-all;transition:color .2s}
+.cl:hover .v{color:var(--gold)}
+footer{padding:34px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;
+       flex-wrap:wrap;gap:12px;font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.06em}
+
+.rv{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1)}
+.rv.in{opacity:1;transform:none}
+::selection{background:var(--gold);color:#0B0E14}
+</style>
+</head>
+<body>
+
+<nav id="nav"><div class="navin">
+  <div class="brand">IV</div>
+  <div class="navlinks">
+    <a href="#lab">Live model</a><a href="#work">Work</a><a href="#stack">Toolkit</a>
+    <a href="#about">About</a><a href="#contact">Contact</a>
+  </div>
+</div></nav>
+
+<header>
+  <canvas id="net"></canvas>
+  <div class="wrap">
+    <div class="kicker">Data Science · York University · Toronto</div>
+    <h1>Iliya<br>Valizadeh<span class="g">.</span></h1>
+    <p class="lede">Third-year data science student. I build models end to end and then write down
+      where they break, because a number nobody can question is not worth much.</p>
+    <div class="herobtns">
+      <a class="btn fill" href="#lab">Try the model</a>
+      <a class="btn" href="https://github.com/Iliya-Valizadeh" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn" href="https://www.linkedin.com/in/iliya-valizadeh" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+  <div class="scrollcue">SCROLL<span></span></div>
+</header>
+
+<section id="lab"><div class="wrap">
+  <div class="rv">
+    <div class="eyebrow">Interactive</div>
+    <h2>Credit risk, running live</h2>
+    <p class="sub">Rather than describe the credit risk model I built, here is a working one you can
+      move. Change the borrower profile and watch the default probability and the drivers behind it
+      update in real time.</p>
+  </div>
+
+  <div class="lab rv">
+    <div class="labhead">
+      <div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+      <div class="labtitle">logistic_regression.predict_proba()</div>
+    </div>
+    <div class="labgrid">
+      <div class="controls">
+        <div class="ctl"><div class="ctlhead"><span class="ctlname">Annual income</span><span class="ctlval" id="v_inc">$85,000</span></div>
+          <input type="range" id="s_inc" min="20000" max="200000" step="1000" value="85000" aria-label="Annual income"></div>
+        <div class="ctl"><div class="ctlhead"><span class="ctlname">Debt to income</span><span class="ctlval" id="v_dti">22%</span></div>
+          <input type="range" id="s_dti" min="0" max="60" step="1" value="22" aria-label="Debt to income ratio"></div>
+        <div class="ctl"><div class="ctlhead"><span class="ctlname">Credit utilization</span><span class="ctlval" id="v_util">24%</span></div>
+          <input type="range" id="s_util" min="0" max="100" step="1" value="24" aria-label="Credit utilization"></div>
+        <div class="ctl"><div class="ctlhead"><span class="ctlname">Credit history</span><span class="ctlval" id="v_hist">120 months</span></div>
+          <input type="range" id="s_hist" min="0" max="240" step="1" value="120" aria-label="Length of credit history in months"></div>
+        <div class="ctl"><div class="ctlhead"><span class="ctlname">Late payments, 24 months</span><span class="ctlval" id="v_late">0</span></div>
+          <input type="range" id="s_late" min="0" max="10" step="1" value="0" aria-label="Late payments in last 24 months"></div>
+      </div>
+
+      <div class="readout">
+        <div class="gauge">
+          <svg viewBox="0 0 200 120" style="width:100%;display:block">
+            <path d="M20,108 A80,80 0 0 1 180,108" fill="none" stroke="#1F2739" stroke-width="9" stroke-linecap="round"/>
+            <path id="arc" d="M20,108 A80,80 0 0 1 180,108" fill="none" stroke="#C8A96A" stroke-width="9"
+                  stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="251.3"
+                  style="transition:stroke-dashoffset .4s cubic-bezier(.4,0,.2,1),stroke .4s"/>
+          </svg>
+          <div class="gaugelbl"><div class="pd" id="pd">12.3%</div><div class="pdcap">Default probability</div></div>
+        </div>
+        <div class="band" id="band">Low risk</div>
+        <div class="contrib">Feature contribution to log-odds</div>
+        <div id="bars"></div>
+        <p class="note">Logistic regression, coefficients set for demonstration. Bars left of centre
+          reduce risk, bars right of centre raise it. The same structure as the model I built, stripped
+          down so it runs in a browser.</p>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section id="work"><div class="wrap">
+  <div class="rv"><div class="eyebrow">Selected work</div><h2>Things I built alone, start to finish</h2>
+  <p class="sub">Both of these were self-directed. No template, no team, no course assignment behind them.</p></div>
+  <div class="cards">
+    <div class="card rv">
+      <div class="cardno">01</div>
+      <h3>Credit risk model</h3>
+      <p>Built end to end, from data cleaning through to a scoring function. I also wrote a
+        plain-language note on where the model fails and when it should be retrained, because a model
+        without a stated failure mode is a liability rather than an asset.</p>
+      <div class="tags"><span class="tag">Python</span><span class="tag">scikit-learn</span>
+        <span class="tag">pandas</span><span class="tag">Model documentation</span></div>
+    </div>
+    <div class="card rv">
+      <div class="cardno">02</div>
+      <h3>Document question answering</h3>
+      <p>A retrieval system that answers questions over a document set. The design goal was not raw
+        accuracy but verifiability, so a non-technical reader can trace every answer back to the
+        passage it came from and decide whether to trust it.</p>
+      <div class="tags"><span class="tag">Python</span><span class="tag">NLP</span>
+        <span class="tag">Retrieval</span><span class="tag">Evaluation</span></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="stack"><div class="wrap">
+  <div class="rv"><div class="eyebrow">Toolkit</div><h2>What I work with</h2>
+  <p class="sub">Mostly self-taught, because I wanted the projects to actually run rather than sit in a notebook.</p></div>
+  <div class="stack rv">
+    <div class="si"><h4>Languages</h4><p>Python<br>SQL<br>JavaScript</p></div>
+    <div class="si"><h4>Data</h4><p>pandas<br>NumPy<br>Feature engineering</p></div>
+    <div class="si"><h4>Modelling</h4><p>scikit-learn<br>Regression<br>Classification</p></div>
+    <div class="si"><h4>Practice</h4><p>Git<br>Model evaluation<br>Technical writing</p></div>
+  </div>
+</div></section>
+
+<section id="about"><div class="wrap">
+  <div class="rv"><div class="eyebrow">About</div><h2>Who you would be working with</h2></div>
+  <div class="about rv">
+    <div>
+      <p>I am a data science student at York University in Toronto, and an international student paying
+        my own way through school. For the past couple of years I have worked through full course loads
+        to cover tuition, and built data projects in the hours in between. <strong>That kind of schedule
+        does not leave much room for excuses, so I stopped making them.</strong></p>
+      <p>I am kind to the people I work with, and I mean that as a promise rather than a line on paper.
+        I share credit. When I do not know something I ask instead of guessing, and I take feedback
+        without getting defensive, because getting it right matters more to me than being right.</p>
+      <p>When I pick up something new I go deep on it fast. I taught myself the tools behind my projects
+        because I wanted them to work. <strong>I also hold a hard line on honesty: I will not put a
+        number on a page that I cannot back up with the code behind it.</strong></p>
+      <p>If you are building something and you want someone reliable, curious, and good to have in the
+        room, I would like to talk.</p>
+    </div>
+    <dl class="facts">
+      <div class="fact"><dt>Program</dt><dd>BSc Data Science, York University</dd></div>
+      <div class="fact"><dt>Graduating</dt><dd>April 2028</dd></div>
+      <div class="fact"><dt>Based in</dt><dd>Toronto, Ontario</dd></div>
+      <div class="fact"><dt>Work status</dt><dd>Eligible to work in Canada</dd></div>
+      <div class="fact"><dt>Looking for</dt><dd>Data science, data engineering, analytics. Available now.</dd></div>
+    </dl>
+  </div>
+</div></section>
+
+<section id="contact"><div class="wrap">
+  <div class="rv"><div class="eyebrow">Contact</div><h2>Get in touch</h2>
+  <p class="sub">Quickest by email. I reply to everything.</p></div>
+  <div class="clinks rv">
+    <a class="cl" href="mailto:iliyavalizadeh60@gmail.com"><div class="k">Email</div><div class="v">iliyavalizadeh60@gmail.com</div></a>
+    <a class="cl" href="https://www.linkedin.com/in/iliya-valizadeh" target="_blank" rel="noopener"><div class="k">LinkedIn</div><div class="v">in/iliya-valizadeh</div></a>
+    <a class="cl" href="https://github.com/Iliya-Valizadeh" target="_blank" rel="noopener"><div class="k">GitHub</div><div class="v">Iliya-Valizadeh</div></a>
+  </div>
+  <footer><div>Iliya Valizadeh · Toronto</div><div>Built from scratch, no framework</div></footer>
+</div></section>
+
+<script>
+/* ---------- hero network ---------- */
+(function(){
+  const c=document.getElementById('net'),x=c.getContext('2d');
+  let w,h,pts=[],mouse={x:-9999,y:-9999};
+  function size(){w=c.width=c.offsetWidth*devicePixelRatio;h=c.height=c.offsetHeight*devicePixelRatio;build();}
+  function build(){
+    const n=Math.min(70,Math.floor(w*h/26000));pts=[];
+    for(let i=0;i<n;i++)pts.push({x:Math.random()*w,y:Math.random()*h,
+      vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28,r:Math.random()*1.6+.7});
+  }
+  addEventListener('mousemove',e=>{mouse.x=e.clientX*devicePixelRatio;mouse.y=e.clientY*devicePixelRatio});
+  addEventListener('mouseout',()=>{mouse.x=mouse.y=-9999});
+  function loop(){
+    x.clearRect(0,0,w,h);
+    const MAX=150*devicePixelRatio;
+    for(let i=0;i<pts.length;i++){
+      const p=pts[i];p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>w)p.vx*=-1; if(p.y<0||p.y>h)p.vy*=-1;
+      for(let j=i+1;j<pts.length;j++){
+        const q=pts[j],d=Math.hypot(p.x-q.x,p.y-q.y);
+        if(d<MAX){x.strokeStyle='rgba(200,169,106,'+(.13*(1-d/MAX))+')';x.lineWidth=devicePixelRatio*.6;
+          x.beginPath();x.moveTo(p.x,p.y);x.lineTo(q.x,q.y);x.stroke();}
+      }
+      const dm=Math.hypot(p.x-mouse.x,p.y-mouse.y);
+      const glow=dm<190*devicePixelRatio?.75:.3;
+      x.fillStyle='rgba(200,169,106,'+glow+')';
+      x.beginPath();x.arc(p.x,p.y,p.r*devicePixelRatio,0,7);x.fill();
+    }
+    requestAnimationFrame(loop);
+  }
+  addEventListener('resize',size);size();loop();
+})();
+
+/* ---------- credit model ---------- */
+(function(){
+  const F=[
+    {id:'inc', name:'Income',        w:-1.85, min:20000, max:200000, fmt:v=>'$'+(+v).toLocaleString()},
+    {id:'dti', name:'Debt to income',w: 2.55, min:0,  max:60,  fmt:v=>v+'%'},
+    {id:'util',name:'Utilization',   w: 2.05, min:0,  max:100, fmt:v=>v+'%'},
+    {id:'hist',name:'History length',w:-1.45, min:0,  max:240, fmt:v=>v+' months'},
+    {id:'late',name:'Late payments', w: 2.25, min:0,  max:10,  fmt:v=>v}
+  ];
+  const B0=-2.0;
+  const $=i=>document.getElementById(i);
+  const barsEl=$('bars');
+  barsEl.innerHTML=F.map(f=>`<div class="bar"><div class="barhead"><span>${f.name}</span>
+     <span id="c_${f.id}">0.00</span></div>
+     <div class="bartrack"><div class="barmid"></div><div class="barfill" id="b_${f.id}"></div></div></div>`).join('');
+
+  function run(){
+    let z=B0, parts=[];
+    F.forEach(f=>{
+      const raw=+$('s_'+f.id).value;
+      const norm=(raw-f.min)/(f.max-f.min);
+      const c=f.w*norm; z+=c; parts.push({f,c});
+      $('v_'+f.id).textContent=f.fmt(raw);
+    });
+    const pd=1/(1+Math.exp(-z));
+    $('pd').textContent=(pd*100).toFixed(1)+'%';
+    $('arc').style.strokeDashoffset=(251.3*(1-pd)).toFixed(1);
+
+    let band,col;
+    if(pd<.05){band='Very low risk';col='#57C98A';}
+    else if(pd<.15){band='Low risk';col='#9BCB6B';}
+    else if(pd<.30){band='Moderate risk';col='#C8A96A';}
+    else if(pd<.50){band='Elevated risk';col='#DD9350';}
+    else{band='High risk';col='#D9604F';}
+    const b=$('band');b.textContent=band;b.style.color=col;b.style.borderColor=col+'55';
+    $('arc').style.stroke=col;
+
+    const mx=Math.max(...parts.map(p=>Math.abs(p.c)),.01);
+    parts.forEach(p=>{
+      const pct=Math.abs(p.c)/mx*50, el=$('b_'+p.f.id);
+      if(p.c>=0){el.style.left='50%';el.style.right='auto';el.style.background=col;}
+      else{el.style.right='50%';el.style.left='auto';el.style.background='#57C98A';}
+      el.style.width=pct+'%';
+      $('c_'+p.f.id).textContent=(p.c>=0?'+':'')+p.c.toFixed(2);
+    });
+  }
+  F.forEach(f=>$('s_'+f.id).addEventListener('input',run));
+  run();
+})();
+
+/* ---------- reveal + nav ---------- */
+(function(){
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),
+    {threshold:.12,rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.rv').forEach((el,i)=>{el.style.transitionDelay=(i%3)*70+'ms';io.observe(el);});
+  const nav=document.getElementById('nav');
+  addEventListener('scroll',()=>nav.classList.toggle('solid',scrollY>40));
+})();
+</script>
+</body>
+</html>
