@@ -184,8 +184,19 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .f dd{text-align:right;color:var(--ink)}
 
 #contact{background:var(--paper2);border-top:1px solid var(--line)}
+.mailwrap{position:relative;display:inline-block}
 .big-mail{font-family:var(--serif);font-size:clamp(1.5rem,5vw,3.3rem);display:inline-block;
-  position:relative;letter-spacing:-.015em;word-break:break-word}
+  position:relative;letter-spacing:-.015em;word-break:break-word;
+  background:none;border:none;padding:0;color:var(--ink);cursor:pointer;text-align:left}
+.mailmenu{position:absolute;left:0;top:calc(100% + 14px);z-index:20;background:var(--card);
+  border:1px solid var(--line);border-radius:10px;padding:6px;min-width:230px;
+  box-shadow:0 18px 40px -22px rgba(20,22,26,.4);opacity:0;visibility:hidden;
+  transform:translateY(-6px);transition:opacity .22s,transform .22s,visibility .22s}
+.mailmenu.open{opacity:1;visibility:visible;transform:translateY(0)}
+.mailmenu a,.mailmenu button{display:block;width:100%;text-align:left;padding:11px 14px;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;color:var(--ink2);
+  background:none;border:none;border-radius:6px;cursor:pointer;transition:.18s}
+.mailmenu a:hover,.mailmenu button:hover{background:var(--paper2);color:var(--ink)}
 .big-mail::after{content:"";position:absolute;left:0;bottom:.05em;width:0;height:1px;background:var(--gold);transition:width .45s cubic-bezier(.65,0,.35,1)}
 .big-mail:hover{color:var(--gold)}
 .big-mail:hover::after{width:100%}
@@ -357,7 +368,15 @@ footer{margin-top:88px;padding-top:24px;border-top:1px solid var(--line);display
   <div class="head rv"><div class="num">05 / CONTACT</div>
     <div><h2>Let's <em>talk</em></h2><p class="sub">Quickest by email. I reply to everything.</p></div></div>
   <div class="rv">
-    <a class="big-mail" href="mailto:iliyavalizadeh60@gmail.com">iliyavalizadeh60@gmail.com</a>
+    <div class="mailwrap">
+      <button class="big-mail" id="mailbtn" aria-haspopup="true" aria-expanded="false">iliyavalizadeh60@gmail.com</button>
+      <div class="mailmenu" id="mailmenu">
+        <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=iliyavalizadeh60@gmail.com" target="_blank" rel="noopener">Gmail</a>
+        <a href="https://outlook.live.com/mail/0/deeplink/compose?to=iliyavalizadeh60@gmail.com" target="_blank" rel="noopener">Outlook</a>
+        <a href="mailto:iliyavalizadeh60@gmail.com">Default mail app</a>
+        <button id="mailcopy" type="button">Copy address</button>
+      </div>
+    </div>
     <div class="socials">
       <a class="btn mag" href="https://www.linkedin.com/in/iliya-valizadeh" target="_blank" rel="noopener"><span>LinkedIn</span></a>
       <a class="btn mag" href="https://github.com/Iliya-Valizadeh" target="_blank" rel="noopener"><span>GitHub</span></a>
@@ -515,6 +534,26 @@ footer{margin-top:88px;padding-top:24px;border-top:1px solid var(--line);display
   document.getElementById('b_clear').onclick=()=>{pts=[];draw();};
   addEventListener('resize',size);size();
   setTimeout(()=>document.getElementById('b_seed').click(),650);
+})();
+
+/* email chooser */
+(function(){
+  const b=document.getElementById('mailbtn'),m=document.getElementById('mailmenu'),
+        c=document.getElementById('mailcopy'),addr='iliyavalizadeh60@gmail.com';
+  if(!b)return;
+  b.addEventListener('click',e=>{e.stopPropagation();
+    const o=m.classList.toggle('open');b.setAttribute('aria-expanded',o);});
+  document.addEventListener('click',e=>{if(!m.contains(e.target)){m.classList.remove('open');
+    b.setAttribute('aria-expanded','false');}});
+  addEventListener('keydown',e=>{if(e.key==='Escape'){m.classList.remove('open');
+    b.setAttribute('aria-expanded','false');}});
+  c.addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText(addr);}catch(_){
+      const t=document.createElement('textarea');t.value=addr;document.body.appendChild(t);
+      t.select();document.execCommand('copy');t.remove();}
+    const old=c.textContent;c.textContent='Copied';
+    setTimeout(()=>{c.textContent=old;},1600);
+  });
 })();
 
 /* reveal + nav */
