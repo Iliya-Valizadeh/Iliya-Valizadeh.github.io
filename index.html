@@ -234,7 +234,7 @@ footer{margin-top:88px;padding-top:24px;border-top:1px solid var(--line);display
       <a class="btn mag" href="https://www.linkedin.com/in/iliya-valizadeh" target="_blank" rel="noopener"><span>LinkedIn</span></a>
     </div>
   </div>
-  <div class="hmeta">GRADUATING APRIL 2028<br>OPEN TO WORK NOW<br>TORONTO, ONTARIO</div>
+  <div class="hmeta">GRADUATING APRIL 2028<br>SEEKING A WINTER 2027 CO-OP<br>TORONTO, ONTARIO</div>
 </header>
 
 <div class="mq"><div class="mqin" id="mq"></div></div>
@@ -273,7 +273,7 @@ footer{margin-top:88px;padding-top:24px;border-top:1px solid var(--line);display
         <div class="band" id="band">Low risk</div>
         <div class="clab">Contribution to log-odds</div>
         <div id="bars"></div>
-        <p class="note">The coefficients here are set by hand for the demo, not taken from a trained model.
+        <p class="note">I set the coefficients here by hand for the demo.
           Bars left of centre lower the risk, bars to the right raise it. The real models, trained on
           307,511 applications, are in the credit-risk-scorecard repo linked below.</p>
       </div>
@@ -315,10 +315,10 @@ footer{margin-top:88px;padding-top:24px;border-top:1px solid var(--line);display
     <a class="proj" data-scroll="1" href="https://github.com/Iliya-Valizadeh/credit-risk-scorecard" target="_blank" rel="noopener">
       <div class="pnum">01</div>
       <div><h3>Credit risk model</h3>
-        <p>LightGBM on 307,511 loan applications, 0.770 ROC-AUC. The class weighting I added pushed the
-          average predicted default rate to 39% against a real 8%, so I calibrated it on held-out data
-          and measured the fix. It also checks how declines fall by gender and age, and has a model
-          card saying where it fails and when to retrain.</p>
+        <p>LightGBM on 307,511 loan applications, 0.769 ROC-AUC. The class weighting I added pushed the
+          average predicted default rate to 40% against a real 8%, so I calibrated it on held-out data
+          and measured the fix. Gender is no longer a model input, and the repo shows which of the
+          remaining inputs still carry it.</p>
         <div class="tags"><span class="tag2">Python</span><span class="tag2">LightGBM</span>
           <span class="tag2">scikit-learn</span><span class="tag2">Calibration</span><span class="tag2">SHAP</span></div></div>
       <div class="pspark"><canvas class="spk" data-seed="7"></canvas></div>
@@ -328,8 +328,8 @@ footer{margin-top:88px;padding-top:24px;border-top:1px solid var(--line);display
       <div class="pnum">02</div>
       <div><h3>Document question answering</h3>
         <p>Questions about RBC's 250-page annual report, answered with the page each claim came from.
-          Most of the work is the testing: a 30-question answer key, three ways of splitting the report
-          against three ways of searching it, and a write-up of every question it still gets wrong.</p>
+          Most of the work is in the testing. There is a 30-question answer key, and a write-up of
+          every question the best setup still gets wrong.</p>
         <div class="tags"><span class="tag2">Python</span><span class="tag2">Retrieval</span>
           <span class="tag2">BM25 + embeddings</span><span class="tag2">Evaluation</span></div></div>
       <div class="pspark"><canvas class="spk" data-seed="19"></canvas></div>
