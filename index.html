@@ -242,7 +242,7 @@ footer{margin-top:88px;padding-top:24px;border-top:1px solid var(--line);display
 <section id="risk"><div class="wrap">
   <div class="head rv"><div class="num">01 / MODEL</div>
     <div><h2>Credit risk, <em>running live</em></h2>
-    <p class="sub">A logistic regression evaluating in your browser as you move the sliders. Change the
+    <p class="sub">A small logistic regression evaluating in your browser as you move the sliders. Change the
       borrower and both the probability and the reasons behind it move with you.</p></div></div>
   <div class="mod rv">
     <div class="modbar"><div class="dot on"></div><div class="dot"></div><div class="dot"></div>
@@ -273,9 +273,9 @@ footer{margin-top:88px;padding-top:24px;border-top:1px solid var(--line);display
         <div class="band" id="band">Low risk</div>
         <div class="clab">Contribution to log-odds</div>
         <div id="bars"></div>
-        <p class="note">Logistic regression with coefficients set for demonstration. Bars left of centre
-          lower the risk, bars to the right raise it. Same structure as the model I built, reduced so it
-          runs client side.</p>
+        <p class="note">The coefficients here are set by hand for the demo, not taken from a trained model.
+          Bars left of centre lower the risk, bars to the right raise it. The real models, trained on
+          307,511 applications, are in the credit-risk-scorecard repo linked below.</p>
       </div>
     </div>
   </div>
@@ -312,25 +312,26 @@ footer{margin-top:88px;padding-top:24px;border-top:1px solid var(--line);display
     <div><h2>Built alone, <em>start to finish</em></h2>
     <p class="sub">Self-directed. No template, no team, no course assignment underneath them.</p></div></div>
   <div class="rv">
-    <a class="proj" data-scroll="1" href="https://github.com/Iliya-Valizadeh" target="_blank" rel="noopener">
+    <a class="proj" data-scroll="1" href="https://github.com/Iliya-Valizadeh/credit-risk-scorecard" target="_blank" rel="noopener">
       <div class="pnum">01</div>
       <div><h3>Credit risk model</h3>
-        <p>Built end to end, from cleaning through to a scoring function. I also wrote a plain-language
-          note on where it fails and when it should be retrained, because a model without a stated
-          failure mode is a liability rather than an asset.</p>
-        <div class="tags"><span class="tag2">Python</span><span class="tag2">scikit-learn</span>
-          <span class="tag2">pandas</span><span class="tag2">Model documentation</span></div></div>
+        <p>LightGBM on 307,511 loan applications, 0.770 ROC-AUC. The class weighting I added pushed the
+          average predicted default rate to 39% against a real 8%, so I calibrated it on held-out data
+          and measured the fix. It also checks how declines fall by gender and age, and has a model
+          card saying where it fails and when to retrain.</p>
+        <div class="tags"><span class="tag2">Python</span><span class="tag2">LightGBM</span>
+          <span class="tag2">scikit-learn</span><span class="tag2">Calibration</span><span class="tag2">SHAP</span></div></div>
       <div class="pspark"><canvas class="spk" data-seed="7"></canvas></div>
       <div class="arrow">↗</div>
     </a>
-    <a class="proj" data-scroll="1.6" href="https://github.com/Iliya-Valizadeh" target="_blank" rel="noopener">
+    <a class="proj" data-scroll="1.6" href="https://github.com/Iliya-Valizadeh/bank-filings-rag" target="_blank" rel="noopener">
       <div class="pnum">02</div>
       <div><h3>Document question answering</h3>
-        <p>A retrieval system answering questions across a document set. The design goal was not raw
-          accuracy but verifiability, so a non-technical reader can trace any answer back to the passage
-          it came from and decide whether to trust it.</p>
-        <div class="tags"><span class="tag2">Python</span><span class="tag2">NLP</span>
-          <span class="tag2">Retrieval</span><span class="tag2">Evaluation</span></div></div>
+        <p>Questions about RBC's 250-page annual report, answered with the page each claim came from.
+          Most of the work is the testing: a 30-question answer key, three ways of splitting the report
+          against three ways of searching it, and a write-up of every question it still gets wrong.</p>
+        <div class="tags"><span class="tag2">Python</span><span class="tag2">Retrieval</span>
+          <span class="tag2">BM25 + embeddings</span><span class="tag2">Evaluation</span></div></div>
       <div class="pspark"><canvas class="spk" data-seed="19"></canvas></div>
       <div class="arrow">↗</div>
     </a>
