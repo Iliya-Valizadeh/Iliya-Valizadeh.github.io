@@ -1,0 +1,25 @@
+<section id="fit"><div class="wrap">
+  <div class="head rv"><div class="num">02 / MODEL</div>
+    <div><h2>Least squares, <em>from scratch</em></h2>
+    <p class="sub">Click the plot to add an observation. The line refits on every click, solved in closed
+      form with no library, and the statistics update with it. Add an outlier and watch R squared fall.</p></div></div>
+  <div class="mod rv">
+    <div class="modbar"><div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+      <code>ols.fit(X, y)</code></div>
+    <div class="pane">
+      <canvas id="plot"></canvas>
+      <dl class="stats">
+        <div class="st"><dt>Slope</dt><dd class="g" id="m_slope">—</dd></div>
+        <div class="st"><dt>Intercept</dt><dd id="m_int">—</dd></div>
+        <div class="st"><dt>R squared</dt><dd id="m_r2">—</dd></div>
+      </dl>
+      <div class="mini">
+        <button id="b_seed">Add sample data</button>
+        <button id="b_out">Add an outlier</button>
+        <button id="b_clear">Clear</button>
+      </div>
+      <p class="note">Ordinary least squares written by hand. Dashed lines are residuals. Coefficients
+        are solved exactly rather than approximated.</p>
+    </div>
+  </div>
+</div></section>
