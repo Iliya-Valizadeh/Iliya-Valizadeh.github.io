@@ -4,9 +4,12 @@ version = "0.1.0"
 description = "Builds the site (Iliya Valizadeh's GitHub Pages) from templates, partials and each project's own reports/metrics.json"
 readme = "README.md"
 requires-python = ">=3.11"
-# Per ADR 0001, build.py and scripts/ need nothing beyond the standard library at
-# run time.
-dependencies = []
+# Per ADR 0001, markdown-it-py is the only package build.py needs at run time. It
+# turns the Markdown in content/ and projects.toml into HTML. scripts/ needs only the
+# standard library.
+dependencies = [
+    "markdown-it-py>=3.0",
+]
 
 [dependency-groups]
 dev = [

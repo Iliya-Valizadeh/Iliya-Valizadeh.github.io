@@ -1,30 +1,9 @@
 <section id="work"><div class="wrap">
   <div class="head rv"><div class="num">03 / WORK</div>
-    <div><h2>Built alone, <em>start to finish</em></h2>
-    <p class="sub">Self-directed. No template, no team, no course assignment underneath them.</p></div></div>
+    <div><h2>Work that <em>shows its work</em></h2>
+    <div class="sub">{{ work_intro }}</div></div></div>
   <div class="rv">
-    <a class="proj" data-scroll="1" href="https://github.com/Iliya-Valizadeh/credit-risk-scorecard" target="_blank" rel="noopener">
-      <div class="pnum">01</div>
-      <div><h3>Credit risk model</h3>
-        <p>LightGBM on 307,511 loan applications, 0.769 ROC-AUC. The class weighting I added pushed the
-          average predicted default rate to 40% against a real 8%, so I calibrated it on held-out data
-          and measured the fix. Gender is no longer a model input, and the repo shows which of the
-          remaining inputs still carry it.</p>
-        <div class="tags"><span class="tag2">Python</span><span class="tag2">LightGBM</span>
-          <span class="tag2">scikit-learn</span><span class="tag2">Calibration</span><span class="tag2">SHAP</span></div></div>
-      <div class="pspark"><canvas class="spk" data-seed="7"></canvas></div>
-      <div class="arrow">↗</div>
-    </a>
-    <a class="proj" data-scroll="1.6" href="https://github.com/Iliya-Valizadeh/bank-filings-rag" target="_blank" rel="noopener">
-      <div class="pnum">02</div>
-      <div><h3>Document question answering</h3>
-        <p>Questions about RBC's 250-page annual report, answered with the page each claim came from.
-          Most of the work is in the testing. There is a 30-question answer key, and a write-up of
-          every question the best setup still gets wrong.</p>
-        <div class="tags"><span class="tag2">Python</span><span class="tag2">Retrieval</span>
-          <span class="tag2">BM25 + embeddings</span><span class="tag2">Evaluation</span></div></div>
-      <div class="pspark"><canvas class="spk" data-seed="19"></canvas></div>
-      <div class="arrow">↗</div>
-    </a>
+{{ project_cards }}
   </div>
+  <div class="howiwork rv">{{ how_i_work }}</div>
 </div></section>
