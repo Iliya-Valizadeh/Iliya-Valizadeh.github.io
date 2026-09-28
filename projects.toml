@@ -14,6 +14,16 @@
 # - `[[project.flag]]`: a true/false value in metrics.json, shown as one of two
 #   sentences (`if_true`, `if_false`). The finding uses it by its `id`.
 #
+# Additions from ADR 0008, read by build.py only:
+#
+# - A `[[project.number]]` entry may set `file` when its number is in a second results
+#   file. A whole-number part of `path` picks a list item. `thousands = true` also
+#   reads a Value cell like "307,511" as one number.
+# - `[[project.row_number]]` is a row entry: the number at position `index` (from 0)
+#   of the Value cell of CLAIMS.md row `row`, shown as written. Only for rows whose
+#   Source is not a JSON file.
+# - Each `work` and `tool` project has a page, built from content/projects/<repo>.md.
+#
 # `metrics = false` means the repo has no reports/metrics.json: no metrics_file, no
 # numbers, no headline. Per ADR 0003, a project that does not exist yet has no entry.
 
@@ -68,6 +78,126 @@ id = "credit_risk_scorecard.logreg_roc_auc"
 path = "models.logreg.roc_auc"
 row = "[ROC-AUC](docs/glossary.md#roc-auc) and [PR-AUC](docs/glossary.md#pr-auc) by model, with 95% intervals"
 decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.logreg_roc_auc_lo"
+path = "bootstrap.roc_auc.logreg.lo"
+row = "[ROC-AUC](docs/glossary.md#roc-auc) and [PR-AUC](docs/glossary.md#pr-auc) by model, with 95% intervals"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.logreg_roc_auc_hi"
+path = "bootstrap.roc_auc.logreg.hi"
+row = "[ROC-AUC](docs/glossary.md#roc-auc) and [PR-AUC](docs/glossary.md#pr-auc) by model, with 95% intervals"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.gap_roc_auc_lo"
+path = "bootstrap.roc_auc.diff.lo"
+row = "Gap between models (bootstrap)"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.gap_roc_auc_hi"
+path = "bootstrap.roc_auc.diff.hi"
+row = "Gap between models (bootstrap)"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.rows_used"
+path = "data.rows_used"
+row = "Rows used, features, default rate"
+decimals = 0
+thousands = true
+
+[[project.number]]
+id = "credit_risk_scorecard.raw_brier"
+path = "calibration.raw.brier"
+row = "Calibration table (raw, Platt, isotonic)"
+decimals = 4
+
+[[project.number]]
+id = "credit_risk_scorecard.isotonic_brier"
+path = "calibration.isotonic.brier"
+row = "Calibration table (raw, Platt, isotonic)"
+decimals = 4
+
+# The gender check is in a second results file (ADR 0008).
+[[project.number]]
+id = "credit_risk_scorecard.with_gender_roc_auc"
+file = "reports/gender_check.json"
+path = "with_gender.roc_auc"
+row = "With/without gender LightGBM ROC-AUC"
+decimals = 4
+
+[[project.number]]
+id = "credit_risk_scorecard.without_gender_roc_auc"
+file = "reports/gender_check.json"
+path = "without_gender.roc_auc"
+row = "With/without gender LightGBM ROC-AUC"
+decimals = 4
+
+[[project.number]]
+id = "credit_risk_scorecard.approval_women_with_gender"
+file = "reports/gender_check.json"
+path = "with_gender.gender.0.approval_rate"
+row = "Gender group decisions (approval, recall, false-positive rate)"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.approval_men_with_gender"
+file = "reports/gender_check.json"
+path = "with_gender.gender.1.approval_rate"
+row = "Gender group decisions (approval, recall, false-positive rate)"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.approval_women_without_gender"
+file = "reports/gender_check.json"
+path = "without_gender.gender.0.approval_rate"
+row = "Gender group decisions (approval, recall, false-positive rate)"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.approval_men_without_gender"
+file = "reports/gender_check.json"
+path = "without_gender.gender.1.approval_rate"
+row = "Gender group decisions (approval, recall, false-positive rate)"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.gender_predictability_auc"
+file = "reports/gender_check.json"
+path = "gender_predictability_auc"
+row = "Gender predictability from remaining inputs"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.default_rate_men"
+file = "reports/gender_check.json"
+path = "with_gender.gender.1.observed_rate"
+row = "Observed default rate by gender"
+decimals = 1
+percent = true
+
+[[project.number]]
+id = "credit_risk_scorecard.default_rate_women"
+file = "reports/gender_check.json"
+path = "with_gender.gender.0.observed_rate"
+row = "Observed default rate by gender"
+decimals = 1
+percent = true
+
+# Row entries: the Source is code, not a JSON file (ADR 0002, ADR 0008).
+[[project.row_number]]
+id = "credit_risk_scorecard.interval_level"
+row = "[Bootstrap](docs/glossary.md#bootstrap) resamples and interval width"
+index = 1
+
+[[project.row_number]]
+id = "credit_risk_scorecard.decline_rate"
+row = "Illustrative [decline rate](docs/glossary.md#decline-rate)"
+index = 0
 
 [[project.number]]
 id = "credit_risk_scorecard.observed_default_rate"
@@ -167,6 +297,70 @@ path = "n_questions.verified"
 row = "Hand-checked questions"
 decimals = 0
 
+[[project.number]]
+id = "bank_filings_rag.n_all"
+path = "n_questions.all"
+row = "Questions in the [answer key](docs/glossary.md#answer-key)"
+decimals = 0
+
+# List items in a JSON path (ADR 0008): results.6 is whole pages + dense search,
+# results.8 whole pages + hybrid, results.2 fixed chunks + hybrid.
+[[project.number]]
+id = "bank_filings_rag.dense_pages_hit5"
+path = "results.6.verified.hit_at_k.value"
+row = "hit@5, whole pages + dense, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.dense_pages_hit5_lo"
+path = "results.6.verified.hit_at_k.ci_low"
+row = "hit@5, whole pages + dense, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.dense_pages_hit5_hi"
+path = "results.6.verified.hit_at_k.ci_high"
+row = "hit@5, whole pages + dense, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.all30_hybrid_pages_hit5"
+path = "results.8.all.hit_at_k.value"
+row = "hit@5, whole pages + hybrid, all 30 questions"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.all30_hybrid_chunks_hit5"
+path = "results.2.all.hit_at_k.value"
+row = "hit@5, fixed chunks + hybrid, all 30 questions"
+decimals = 2
+
+# Row entries: the Source is a Markdown report or code (ADR 0002, ADR 0008).
+[[project.row_number]]
+id = "bank_filings_rag.n_script_only"
+row = "Questions checked by script only (30 rows minus the 12 marked `hand`)"
+index = 0
+
+[[project.row_number]]
+id = "bank_filings_rag.chunk_words"
+row = "Fixed-chunk size, in words"
+index = 0
+
+[[project.row_number]]
+id = "bank_filings_rag.word_piece_limit"
+row = "[Embedding](docs/glossary.md#embedding) model's word-piece limit"
+index = 0
+
+[[project.row_number]]
+id = "bank_filings_rag.median_word_pieces"
+row = "Median word pieces per page (980.5, rounded)"
+index = 0
+
+[[project.row_number]]
+id = "bank_filings_rag.share_over_limit"
+row = "Pages longer than the word-piece limit"
+index = 0
+
 [[project]]
 repo = "second-look"
 kind = "tool"
@@ -249,6 +443,69 @@ path = "interval.level"
 row = "Interval level"
 decimals = 0
 percent = true
+synthetic = true
+
+[[project.number]]
+id = "second_look.recurring_precision_share"
+path = "engine.recurring.precision.value"
+row = "Recurring precision"
+decimals = 3
+synthetic = true
+
+[[project.number]]
+id = "second_look.unusual_precision"
+path = "engine.unusual.precision.value"
+row = "Unusual precision"
+decimals = 4
+synthetic = true
+
+[[project.number]]
+id = "second_look.unusual_precision_lo"
+path = "engine.unusual.precision.ci_low"
+row = "Unusual precision"
+decimals = 4
+synthetic = true
+
+[[project.number]]
+id = "second_look.unusual_precision_hi"
+path = "engine.unusual.precision.ci_high"
+row = "Unusual precision"
+decimals = 4
+synthetic = true
+
+[[project.number]]
+id = "second_look.first_run_unusual_precision"
+path = "first_run.metrics.engine.unusual.precision.value"
+row = "First run: unusual precision"
+decimals = 4
+synthetic = true
+
+[[project.number]]
+id = "second_look.stress_recurring_recall"
+path = "stress.recurring.recall"
+row = "Stress set: recurring recall and precision"
+decimals = 4
+synthetic = true
+
+[[project.number]]
+id = "second_look.varying_bill_recall"
+path = "secondary.recurring_variable_recall.recall"
+row = "Varying bills planted, and recall on them"
+decimals = 3
+synthetic = true
+
+# Row entries: the bars are constants in evaluation/evaluate.py (ADR 0002, ADR 0008).
+# They are the bars for the synthetic test, so they are marked synthetic too.
+[[project.row_number]]
+id = "second_look.recurring_precision_bar"
+row = "Failure bar: recurring precision"
+index = 0
+synthetic = true
+
+[[project.row_number]]
+id = "second_look.unusual_precision_bar"
+row = "Failure bar: duplicate and unusual precision"
+index = 0
 synthetic = true
 
 [[project.number]]

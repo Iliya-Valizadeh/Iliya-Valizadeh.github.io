@@ -1,0 +1,209 @@
+{
+ "with_gender": {
+  "roc_auc": 0.7702647422259685,
+  "threshold": 0.5993938481625796,
+  "gender": [
+   {
+    "group": "F",
+    "n": 40345,
+    "observed_rate": 0.06957491634651133,
+    "mean_pd": 0.06981857687502507,
+    "approval_rate": 0.8450365596728219,
+    "tpr": 0.4752404702529391,
+    "fpr": 0.1310139059086792
+   },
+   {
+    "group": "M",
+    "n": 21158,
+    "observed_rate": 0.10199451744021173,
+    "mean_pd": 0.099239062375442,
+    "approval_rate": 0.7228471500141791,
+    "tpr": 0.6172381835032438,
+    "fpr": 0.2385263157894737
+   }
+  ],
+  "age_band": [
+   {
+    "group": "20-29",
+    "n": 8975,
+    "observed_rate": 0.1150974930362117,
+    "mean_pd": 0.1158413200720491,
+    "approval_rate": 0.6461281337047353,
+    "tpr": 0.6747337850919651,
+    "fpr": 0.3121380005036515
+   },
+   {
+    "group": "30-44",
+    "n": 24664,
+    "observed_rate": 0.0896042815439507,
+    "mean_pd": 0.08778507261845025,
+    "approval_rate": 0.7737593253324684,
+    "tpr": 0.5809954751131222,
+    "fpr": 0.19132448561503518
+   },
+   {
+    "group": "45-59",
+    "n": 20778,
+    "observed_rate": 0.06646452979112523,
+    "mean_pd": 0.06630958901447667,
+    "approval_rate": 0.8584560592934835,
+    "tpr": 0.4373642288196959,
+    "fpr": 0.12048254884775997
+   },
+   {
+    "group": "60+",
+    "n": 7086,
+    "observed_rate": 0.04812305955405024,
+    "mean_pd": 0.04712715869483419,
+    "approval_rate": 0.9408693197854925,
+    "tpr": 0.2375366568914956,
+    "fpr": 0.05011119347664937
+   }
+  ]
+ },
+ "without_gender": {
+  "roc_auc": 0.7687397655034531,
+  "threshold": 0.6001004034693426,
+  "gender": [
+   {
+    "group": "F",
+    "n": 40345,
+    "observed_rate": 0.06957491634651133,
+    "mean_pd": 0.07361912353968125,
+    "approval_rate": 0.8319742223323832,
+    "tpr": 0.49234057712860707,
+    "fpr": 0.1437743087005168
+   },
+   {
+    "group": "M",
+    "n": 21158,
+    "observed_rate": 0.10199451744021173,
+    "mean_pd": 0.09200427038175817,
+    "approval_rate": 0.752481330938652,
+    "tpr": 0.5829471733086191,
+    "fpr": 0.20942105263157895
+   }
+  ],
+  "age_band": [
+   {
+    "group": "20-29",
+    "n": 8975,
+    "observed_rate": 0.1150974930362117,
+    "mean_pd": 0.11590087235919301,
+    "approval_rate": 0.6498050139275766,
+    "tpr": 0.6786060019361084,
+    "fpr": 0.3074792243767313
+   },
+   {
+    "group": "30-44",
+    "n": 24664,
+    "observed_rate": 0.0896042815439507,
+    "mean_pd": 0.08788102215132264,
+    "approval_rate": 0.7739215050275705,
+    "tpr": 0.5778280542986425,
+    "fpr": 0.19145809209940323
+   },
+   {
+    "group": "45-59",
+    "n": 20778,
+    "observed_rate": 0.06646452979112523,
+    "mean_pd": 0.06638471648966246,
+    "approval_rate": 0.8598517662912696,
+    "tpr": 0.42939898624185374,
+    "fpr": 0.11955457029437543
+   },
+   {
+    "group": "60+",
+    "n": 7086,
+    "observed_rate": 0.04812305955405024,
+    "mean_pd": 0.04653406618113098,
+    "approval_rate": 0.9456675134067175,
+    "tpr": 0.20234604105571846,
+    "fpr": 0.046849518161601184
+   }
+  ]
+ },
+ "gender_predictability_auc": 0.8761166224984711,
+ "proxies": [
+  {
+   "feature": "EXT_SOURCE_1",
+   "corr_with_male": -0.19882145303553042,
+   "mean_abs_shap": 0.18317285508388018,
+   "shap_rank": 3
+  },
+  {
+   "feature": "DAYS_BIRTH",
+   "corr_with_male": 0.14874865116085895,
+   "mean_abs_shap": 0.06616920955400227,
+   "shap_rank": 9
+  },
+  {
+   "feature": "FLAG_OWN_CAR_N",
+   "corr_with_male": -0.34442228574760275,
+   "mean_abs_shap": 0.020713573697096158,
+   "shap_rank": 20
+  }
+ ],
+ "most_gender_correlated": [
+  {
+   "feature": "FLAG_OWN_CAR_N",
+   "corr_with_male": -0.34442228574760275,
+   "mean_abs_shap": 0.020713573697096158,
+   "shap_rank": 20
+  },
+  {
+   "feature": "FLAG_OWN_CAR_Y",
+   "corr_with_male": 0.34442228574760275,
+   "mean_abs_shap": 0.00529819908268546,
+   "shap_rank": 45
+  },
+  {
+   "feature": "OCCUPATION_TYPE_Drivers",
+   "corr_with_male": 0.32449619080761555,
+   "mean_abs_shap": 0.014898472962165846,
+   "shap_rank": 28
+  },
+  {
+   "feature": "FLAG_DOCUMENT_8",
+   "corr_with_male": 0.2502672627295432,
+   "mean_abs_shap": 0.0003767793840812324,
+   "shap_rank": 144
+  },
+  {
+   "feature": "EXT_SOURCE_1",
+   "corr_with_male": -0.19882145303553042,
+   "mean_abs_shap": 0.18317285508388018,
+   "shap_rank": 3
+  },
+  {
+   "feature": "OCCUPATION_TYPE_Sales staff",
+   "corr_with_male": -0.15879115615308176,
+   "mean_abs_shap": 0.00017769056480481345,
+   "shap_rank": 160
+  },
+  {
+   "feature": "FLAG_EMP_PHONE",
+   "corr_with_male": 0.15835533472805707,
+   "mean_abs_shap": 0.0005777508563379861,
+   "shap_rank": 132
+  },
+  {
+   "feature": "ORGANIZATION_TYPE_XNA",
+   "corr_with_male": -0.15830151613032498,
+   "mean_abs_shap": 0.00010624439979873857,
+   "shap_rank": 178
+  },
+  {
+   "feature": "NAME_INCOME_TYPE_Pensioner",
+   "corr_with_male": -0.15827264368788646,
+   "mean_abs_shap": 0.0019394243403002035,
+   "shap_rank": 95
+  },
+  {
+   "feature": "DAYS_BIRTH",
+   "corr_with_male": 0.14874865116085895,
+   "mean_abs_shap": 0.06616920955400227,
+   "shap_rank": 9
+  }
+ ]
+}

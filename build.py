@@ -1,9 +1,9 @@
-"""Build the site: the Home and About pages, from templates, partials and content.
+"""Build the site: Home, About and one page per project, from templates and content.
 
 Usage: python build.py [--offline]
 
-Per docs/decisions/0001-a-small-python-build-deployed-by-actions.md and
-docs/decisions/0007-home-and-about-pages.md:
+Per docs/decisions/0001-a-small-python-build-deployed-by-actions.md,
+docs/decisions/0007-home-and-about-pages.md and docs/decisions/0008-project-pages.md:
 
 - `templates/page.html` is the shell every page shares. `partials/*.html` are the
   blocks a page is made of. Both hold markup and short labels only. The About section
@@ -18,6 +18,12 @@ docs/decisions/0007-home-and-about-pages.md:
   `metrics.json` into one of two sentences.
 - The Home project list is a loop over `projects.toml`: every `work` entry, then
   every `tool` entry. `standard` entries get no card (ADR 0003).
+- Every `work` project gets a case study at `projects/<repo>.html`, and every `tool`
+  a "For everyone" page at `for-everyone/<repo>.html`, both from
+  `content/projects/<repo>.md` (ADR 0008).
+- Beyond the shared code, a number may come from a second results file, from a list
+  item in a JSON path, from a Value cell with thousands commas, or, as a row entry,
+  from the Value cell itself when its Source is not a JSON file (ADR 0008).
 - Output goes to `_site/` (what is deployed) and `_build/md/` (each page's prose as
   filled-in Markdown, for the writing and number checks). Both are gitignored.
 - `static/` is copied unchanged, and `googleb968c9a0c91c49c6.html` is copied byte for
@@ -36,6 +42,7 @@ import shutil
 import sys
 import tomllib
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -45,13 +52,14 @@ ROOT = Path(__file__).resolve().parent
 
 from scripts.shared.render_readme import (  # noqa: E402
     GITHUB_USER,
+    ClaimRow,
     Fetcher,
+    NumberConfig,
     OfflineFetcher,
     OnlineFetcher,
     ProjectConfig,
     RenderError,
     format_number,
-    json_value,
     load_config,
     parse_claims_table,
     source_matches,
@@ -72,11 +80,18 @@ PLACEHOLDER_RE = re.compile(r"\{\{\s*([a-zA-Z0-9_]+)\s*\}\}")
 SLOT_RE = re.compile(r"^<!--\s*slot:\s*([a-z0-9_]+)\s*-->[ \t]*$", re.M)
 FRONT_MATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 SENTENCE_END_RE = re.compile(r"(?<=[.!?])\s+")
+# A number in a CLAIMS.md Value cell, with thousands commas kept together ("307,511").
+# Otherwise it reads a cell the way the shared VALUE_NUMBER_RE does.
+CELL_NUMBER_RE = re.compile(r"(?:(?<![\d.])-)?(?:\d{1,3}(?:,\d{3})+(?!\d)|\d+)(?:\.\d+)?%?")
 
 KINDS = ("work", "tool", "standard")
 CARD_KINDS = ("work", "tool")
+# Where each kind's page goes, and the words that name it (ADR 0008).
+PAGE_DIRS = {"work": "projects", "tool": "for-everyone"}
+PAGE_LABELS = {"work": "CASE STUDY", "tool": "FOR EVERYONE"}
+PAGE_LINK_TEXT = {"work": "Read the case study", "tool": "What it does, for everyone"}
 
-MARKDOWN = MarkdownIt("commonmark")
+MARKDOWN = MarkdownIt("commonmark").enable("table")
 
 
 class BuildError(Exception):
@@ -93,6 +108,8 @@ class Page:
     script: str
     home: str
     contact_label: str
+    root: str = ""
+    project: SiteProject | None = None
 
 
 PAGES = (
@@ -126,8 +143,18 @@ class Flag:
 
 
 @dataclass(frozen=True)
+class RowNumber:
+    """A row entry (ADR 0002, ADR 0008): a number read from a CLAIMS.md Value cell."""
+
+    id: str
+    row: str
+    index: int
+    synthetic: bool = False
+
+
+@dataclass(frozen=True)
 class SiteProject:
-    """The site's own fields for one `[[project]]` entry (ADR 0003, ADR 0007)."""
+    """The site's own fields for one `[[project]]` entry (ADR 0003, 0007, 0008)."""
 
     repo: str
     kind: str
@@ -140,6 +167,8 @@ class SiteProject:
     metric_label: str = ""
     live_url: str = ""
     flags: tuple[Flag, ...] = ()
+    number_files: tuple[tuple[str, str], ...] = ()
+    row_numbers: tuple[RowNumber, ...] = ()
 
 
 @dataclass
@@ -168,6 +197,14 @@ def load_site_projects(path: Path) -> list[SiteProject]:
             Flag(id=f["id"], path=f["path"], if_true=f["if_true"], if_false=f["if_false"])
             for f in p.get("flag", [])
         )
+        number_files = tuple((n["id"], n["file"]) for n in p.get("number", []) if "file" in n)
+        row_numbers = []
+        for r in p.get("row_number", []):
+            index = r.get("index")
+            if not isinstance(index, int) or isinstance(index, bool) or index < 0:
+                raise BuildError(f"{repo}: row_number {r.get('id')!r} needs an index of 0 or more")
+            synthetic = bool(r.get("synthetic", False))
+            row_numbers.append(RowNumber(r["id"], r["row"], index, synthetic))
         project = SiteProject(
             repo=repo,
             kind=kind,
@@ -180,10 +217,13 @@ def load_site_projects(path: Path) -> list[SiteProject]:
             metric_label=p.get("metric_label", ""),
             live_url=p.get("live_url", ""),
             flags=flags,
+            number_files=number_files,
+            row_numbers=tuple(row_numbers),
         )
         if kind in CARD_KINDS and not (project.title and project.summary):
             raise BuildError(f"{repo}: a {kind} project needs a title and a summary")
-        if kind == "standard" and (project.title or project.metric or project.flags):
+        has_numbers = project.metric or project.flags or project.row_numbers
+        if kind == "standard" and (project.title or has_numbers):
             raise BuildError(f"{repo}: a standard repo gets no card, number or flag (ADR 0003)")
         if bool(project.metric) != bool(project.metric_label):
             raise BuildError(f"{repo}: metric and metric_label go together")
@@ -200,42 +240,119 @@ def fetch_numbers(
     """Fetch, match and format every configured number and flag.
 
     Every number is checked against its own repo's CLAIMS.md before the build
-    trusts it, exactly like the profile's renderer does (ADR 0002). A failure stops
-    the whole build: nothing is deployed, and the last good site stays up.
+    trusts it, exactly like the profile's renderer does (ADR 0002), with the
+    additions of ADR 0008. A failure stops the whole build: nothing is deployed, and
+    the last good site stays up.
     """
-    flags_by_repo = {p.repo: p.flags for p in site}
+    site_by_repo = {p.repo: p for p in site}
     numbers = Numbers(values={}, synthetic=set(), flags={}, sources={})
     for project in config:
-        project_flags = flags_by_repo.get(project.repo, ())
-        if not project.numbers and not project_flags:
+        repo = project.repo
+        extra = site_by_repo.get(repo, SiteProject(repo=repo, kind="standard"))
+        if not (project.numbers or extra.flags or extra.row_numbers):
             continue
-        commit = fetcher.commit(project.repo)
-        numbers.sources[project.repo] = commit
-        metrics = json.loads(fetcher.read(project.repo, commit, project.metrics_file))
-        claim_rows = parse_claims_table(fetcher.read(project.repo, commit, "CLAIMS.md"))
+        commit = fetcher.commit(repo)
+        numbers.sources[repo] = commit
+        results = ResultFiles(fetcher, repo, commit)
+        claim_rows = parse_claims_table(fetcher.read(repo, commit, "CLAIMS.md"))
+        files = dict(extra.number_files)
         for number in project.numbers:
-            row = next((r for r in claim_rows if r.claim.strip() == number.row.strip()), None)
-            if row is None:
+            file = files.get(number.id, project.metrics_file)
+            row = find_row(claim_rows, number.row, repo, number.id)
+            if not source_matches(row.source, file, number.path):
                 raise RenderError(
-                    f"{project.repo}: CLAIMS.md has no row '{number.row}' for {number.id}"
+                    f"{repo}: CLAIMS.md row '{number.row}' Source "
+                    f"'{row.source}' does not cover {file}#{number.path}"
                 )
-            if not source_matches(row.source, project.metrics_file, number.path):
+            formatted = format_number(json_number(results.get(file), number.path), number)
+            if not cell_matches(row.value, formatted, number):
                 raise RenderError(
-                    f"{project.repo}: CLAIMS.md row '{number.row}' Source "
-                    f"'{row.source}' does not cover {number.path}"
-                )
-            formatted = format_number(json_value(metrics, number.path), number)
-            if not value_cell_matches(row.value, formatted, number):
-                raise RenderError(
-                    f"{project.repo}: {number.id} = {formatted} is not in CLAIMS.md "
+                    f"{repo}: {number.id} = {formatted} is not in CLAIMS.md "
                     f"row '{number.row}' Value cell '{row.value}'"
                 )
-            numbers.values[number.id] = formatted
-            if number.synthetic:
-                numbers.synthetic.add(number.id)
-        for flag in project_flags:
-            numbers.flags[flag.id] = json_flag(metrics, flag.path)
+            add_number(numbers, number.id, formatted, number.synthetic)
+        for entry in extra.row_numbers:
+            add_number(numbers, entry.id, row_value(claim_rows, entry, repo), entry.synthetic)
+        for flag in extra.flags:
+            numbers.flags[flag.id] = json_flag(results.get(project.metrics_file), flag.path)
     return numbers
+
+
+class ResultFiles:
+    """One repo's JSON results files at one commit, each read once."""
+
+    def __init__(self, fetcher: Fetcher, repo: str, commit: str) -> None:
+        self.fetcher, self.repo, self.commit = fetcher, repo, commit
+        self.loaded: dict[str, Any] = {}
+
+    def get(self, file: str) -> Any:
+        if file not in self.loaded:
+            self.loaded[file] = json.loads(self.fetcher.read(self.repo, self.commit, file))
+        return self.loaded[file]
+
+
+def add_number(numbers: Numbers, number_id: str, value: str, synthetic: bool) -> None:
+    if number_id in numbers.values:
+        raise BuildError(f"number id '{number_id}' is defined twice")
+    numbers.values[number_id] = value
+    if synthetic:
+        numbers.synthetic.add(number_id)
+
+
+def find_row(rows: list[ClaimRow], claim: str, repo: str, number_id: str) -> ClaimRow:
+    """The CLAIMS.md row whose Claim cell is exactly `claim`."""
+    row = next((r for r in rows if r.claim.strip() == claim.strip()), None)
+    if row is None:
+        raise RenderError(f"{repo}: CLAIMS.md has no row '{claim}' for {number_id}")
+    return row
+
+
+def json_number(data: Any, path: str) -> Decimal:
+    """Read a dotted path out of parsed JSON, as a Decimal.
+
+    The same as the shared `json_value`, except that a whole-number part also picks a
+    list item (ADR 0008), so `results.6.all.hit_at_k.value` works.
+    """
+    node = data
+    for part in path.split("."):
+        if isinstance(node, dict) and part in node:
+            node = node[part]
+        elif isinstance(node, list) and part.isdigit() and int(part) < len(node):
+            node = node[int(part)]
+        else:
+            raise RenderError(f"path '{path}' not found in its results file")
+    if isinstance(node, bool) or not isinstance(node, int | float):
+        raise RenderError(f"path '{path}' is not a number")
+    return Decimal(repr(node))
+
+
+def cell_numbers(value_cell: str) -> list[str]:
+    """Every number in a Value cell, as written, with thousands commas kept together."""
+    return CELL_NUMBER_RE.findall(value_cell)
+
+
+def cell_matches(value_cell: str, formatted: str, number: NumberConfig) -> bool:
+    """The shared Value-cell match, reading "307,511" as one number for `thousands`."""
+    if number.thousands:
+        value_cell = CELL_NUMBER_RE.sub(lambda m: m.group(0).replace(",", ""), value_cell)
+    return value_cell_matches(value_cell, formatted, number)
+
+
+def row_value(rows: list[ClaimRow], entry: RowNumber, repo: str) -> str:
+    """A row entry's number, exactly as its CLAIMS.md Value cell writes it (ADR 0008)."""
+    row = find_row(rows, entry.row, repo, entry.id)
+    source_file = row.source.partition("#")[0].strip()
+    if source_file.endswith(".json"):
+        raise RenderError(
+            f"{repo}: {entry.id}: row '{entry.row}' comes from {source_file}, so it needs "
+            "a JSON entry with a path, not a row entry (ADR 0002)"
+        )
+    found = cell_numbers(row.value)
+    if entry.index >= len(found):
+        raise RenderError(
+            f"{repo}: {entry.id}: Value cell '{row.value}' has no number at index {entry.index}"
+        )
+    return found[entry.index]
 
 
 def fetch_sources(config: list[ProjectConfig], fetcher: Fetcher) -> dict[str, str]:
@@ -255,11 +372,18 @@ def json_flag(data: Any, path: str) -> bool:
     return node
 
 
-def fill_text(text: str, numbers: Numbers, flags: dict[str, Flag], where: str) -> str:
+def fill_text(
+    text: str,
+    numbers: Numbers,
+    flags: dict[str, Flag],
+    where: str,
+    all_synthetic: bool = False,
+) -> str:
     """Fill flag and number placeholders in one piece of Markdown prose.
 
     Flags first, since a flag's sentence may hold number placeholders. Then every
-    sentence that uses a synthetic number must say "synthetic" (ADR 0002).
+    sentence that uses a synthetic number must say "synthetic" (ADR 0002). With
+    `all_synthetic`, every number counts as synthetic (ADR 0008).
     """
 
     def fill_flag(match: re.Match[str]) -> str:
@@ -273,9 +397,10 @@ def fill_text(text: str, numbers: Numbers, flags: dict[str, Flag], where: str) -
 
     for sentence in SENTENCE_END_RE.split(text):
         used = set(NUMBER_PLACEHOLDER_RE.findall(sentence))
-        if used & numbers.synthetic and "synthetic" not in sentence.lower():
+        marked = used if all_synthetic else used & numbers.synthetic
+        if marked and "synthetic" not in sentence.lower():
             raise BuildError(
-                f"{where}: {sorted(used & numbers.synthetic)} was measured on synthetic "
+                f"{where}: {sorted(marked)} was measured on synthetic "
                 f"data, but its sentence does not say 'synthetic': {sentence.strip()[:80]!r}"
             )
 
@@ -352,7 +477,10 @@ def project_card(
 
     tags = "".join(f'<span class="tag2">{html.escape(t)}</span>' for t in project.tags)
     url = repo_url(project.repo)
-    links = [f'<a href="{url}" target="_blank" rel="noopener">Code and write-up</a>']
+    links = [
+        f'<a href="{page_path(project)}">{PAGE_LINK_TEXT[project.kind]}</a>',
+        f'<a href="{url}" target="_blank" rel="noopener">Code and write-up</a>',
+    ]
     if project.live_url:
         live = html.escape(project.live_url, quote=True)
         links.append(f'<a href="{live}" target="_blank" rel="noopener">Try it live</a>')
@@ -406,22 +534,65 @@ def render_template(template_text: str, context: dict[str, str]) -> str:
     return PLACEHOLDER_RE.sub(replace, template_text)
 
 
+def page_path(project: SiteProject) -> str:
+    """Where a work or tool project's own page is built, relative to the site root."""
+    return f"{PAGE_DIRS[project.kind]}/{project.repo}.html"
+
+
+def project_pages(site: list[SiteProject]) -> list[Page]:
+    """One page per work project, then per tool, in config order (ADR 0008)."""
+    ordered = [p for kind in CARD_KINDS for p in site if p.kind == kind]
+    return [
+        Page(
+            output=page_path(p),
+            content=f"projects/{p.repo}.md",
+            partials=("nav", "project", "contact"),
+            script="site.js",
+            home="../index.html",
+            contact_label="02 / CONTACT",
+            root="../",
+            project=p,
+        )
+        for p in ordered
+    ]
+
+
+def project_context(project: SiteProject) -> dict[str, str]:
+    """The labels and links a project page shows around its prose."""
+    url = repo_url(project.repo)
+    links = [f'<a href="{url}" target="_blank" rel="noopener">Code and full write-up</a>']
+    if project.live_url:
+        live = html.escape(project.live_url, quote=True)
+        links.insert(0, f'<a href="{live}" target="_blank" rel="noopener">Try it live</a>')
+    return {
+        "page_label": f"01 / {PAGE_LABELS[project.kind]}",
+        "project_title": html.escape(project.title),
+        "project_links": "".join(links),
+    }
+
+
 def build_page(
     page: Page, numbers: Numbers, site: list[SiteProject], flags: dict[str, Flag]
 ) -> tuple[str, str]:
     """One page as HTML, and its prose as filled-in Markdown."""
     front, slots = read_content(page.content)
     where = f"content/{page.content}"
-    filled = {name: fill_text(text, numbers, flags, where) for name, text in slots.items()}
+    all_synthetic = front.get("synthetic_only", "no") == "yes"
+    filled = {
+        name: fill_text(text, numbers, flags, where, all_synthetic) for name, text in slots.items()
+    }
 
     context = {name: markdown_html(text) for name, text in filled.items()}
     context.update(
         home=page.home,
+        root=page.root,
         contact_label=page.contact_label,
-        script=f"static/{page.script}",
+        script=f"{page.root}static/{page.script}",
         page_title=html.escape(front["title"]),
         page_description=html.escape(front["description"], quote=True),
     )
+    if page.project is not None:
+        context.update(project_context(page.project))
     md_parts = [f"Page title: {front['title']}.", front["description"], *filled.values()]
     if "work" in page.partials:
         cards_html, cards_md = project_cards(site, numbers, flags)
@@ -458,7 +629,8 @@ def build(offline: bool) -> None:
     numbers = fetch_numbers(config, site, fetcher)
     flags = {f.id: f for p in site for f in p.flags}
 
-    pages = [(page, *build_page(page, numbers, site, flags)) for page in PAGES]
+    all_pages = [*PAGES, *project_pages(site)]
+    pages = [(page, *build_page(page, numbers, site, flags)) for page in all_pages]
 
     if SITE_DIR.exists():
         shutil.rmtree(SITE_DIR)
@@ -468,9 +640,10 @@ def build(offline: bool) -> None:
     BUILD_MD_DIR.mkdir(parents=True)
 
     for page, page_html, page_md in pages:
-        (SITE_DIR / page.output).write_text(page_html, encoding="utf-8", newline="\n")
-        md_name = Path(page.output).with_suffix(".md").name
-        (BUILD_MD_DIR / md_name).write_text(page_md, encoding="utf-8", newline="\n")
+        md_path = (BUILD_MD_DIR / page.output).with_suffix(".md")
+        for path, text in ((SITE_DIR / page.output, page_html), (md_path, page_md)):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8", newline="\n")
     copy_static(SITE_DIR)
     copy_verification_file(SITE_DIR)
     sources_text = json.dumps(numbers.sources, indent=2, sort_keys=True) + "\n"
