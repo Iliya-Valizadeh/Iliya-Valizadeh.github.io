@@ -1,0 +1,41 @@
+<section id="risk"><div class="wrap">
+  <div class="head rv"><div class="num">01 / MODEL</div>
+    <div><h2>Credit risk, <em>running live</em></h2>
+    <p class="sub">A small logistic regression evaluating in your browser as you move the sliders. Change the
+      borrower and both the probability and the reasons behind it move with you.</p></div></div>
+  <div class="mod rv">
+    <div class="modbar"><div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+      <code>model.predict_proba(x)</code></div>
+    <div class="split">
+      <div class="pane">
+        <div class="ctl"><div class="ctlhead"><span class="ctlname">Annual income</span><span class="ctlval" id="v_inc">$85,000</span></div>
+          <input type="range" id="s_inc" min="20000" max="200000" step="1000" value="85000" aria-label="Annual income"></div>
+        <div class="ctl"><div class="ctlhead"><span class="ctlname">Debt to income</span><span class="ctlval" id="v_dti">22%</span></div>
+          <input type="range" id="s_dti" min="0" max="60" step="1" value="22" aria-label="Debt to income"></div>
+        <div class="ctl"><div class="ctlhead"><span class="ctlname">Credit utilization</span><span class="ctlval" id="v_util">24%</span></div>
+          <input type="range" id="s_util" min="0" max="100" step="1" value="24" aria-label="Credit utilization"></div>
+        <div class="ctl"><div class="ctlhead"><span class="ctlname">Credit history</span><span class="ctlval" id="v_hist">120 months</span></div>
+          <input type="range" id="s_hist" min="0" max="240" step="1" value="120" aria-label="Credit history"></div>
+        <div class="ctl"><div class="ctlhead"><span class="ctlname">Late payments, 24 months</span><span class="ctlval" id="v_late">0</span></div>
+          <input type="range" id="s_late" min="0" max="10" step="1" value="0" aria-label="Late payments"></div>
+      </div>
+      <div class="pane">
+        <div class="gauge">
+          <svg viewBox="0 0 200 118" style="width:100%;display:block">
+            <path d="M18,106 A82,82 0 0 1 182,106" fill="none" stroke="#E5E1D8" stroke-width="10" stroke-linecap="round"/>
+            <path id="arc" d="M18,106 A82,82 0 0 1 182,106" fill="none" stroke="#9A7A24" stroke-width="10"
+              stroke-linecap="round" stroke-dasharray="257.6" stroke-dashoffset="257.6"
+              style="transition:stroke-dashoffset .45s cubic-bezier(.4,0,.2,1),stroke .45s"/>
+          </svg>
+          <div class="glab"><div class="pd" id="pd">12.3%</div><div class="pdc">Probability of default</div></div>
+        </div>
+        <div class="band" id="band">Low risk</div>
+        <div class="clab">Contribution to log-odds</div>
+        <div id="bars"></div>
+        <p class="note">I set the coefficients here by hand for the demo.
+          Bars left of centre lower the risk, bars to the right raise it. The real models, trained on
+          307,511 applications, are in the credit-risk-scorecard repo linked below.</p>
+      </div>
+    </div>
+  </div>
+</div></section>
