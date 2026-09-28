@@ -6,6 +6,7 @@ All offline, against `tests/fixtures/`.
 from __future__ import annotations
 
 import re
+import shutil
 from pathlib import Path
 
 import pytest
@@ -81,16 +82,37 @@ def test_pages_load_the_right_script(built: tuple[Path, Path]) -> None:
 
 
 def test_markdown_record_holds_every_page(built: tuple[Path, Path]) -> None:
-    names = sorted(p.name for p in built[1].iterdir())
-    assert names == ["about.md", "index.md"]
-    for path in built[1].iterdir():
+    names = sorted(p.relative_to(built[1]).as_posix() for p in built[1].rglob("*.md"))
+    assert names == [
+        "about.md",
+        "for-everyone/second-look.md",
+        "index.md",
+        "projects/bank-filings-rag.md",
+        "projects/credit-risk-scorecard.md",
+    ]
+    for path in built[1].rglob("*.md"):
         assert not HACK_THE_NORTH_RE.search(path.read_text(encoding="utf-8"))
+
+
+MADE_UP_PAGE = """---
+title: A made-up example
+description: Only here for a test.
+---
+<!-- slot: lede -->
+Lede.
+<!-- slot: main -->
+Main.
+<!-- slot: weak -->
+Weak.
+<!-- slot: next -->
+Next.
+"""
 
 
 def test_a_new_work_project_gets_a_card_with_no_template_change(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """ADR 0003: adding a project is one config entry."""
+    """ADR 0003 and ADR 0008: adding a project is one config entry and one page."""
     extra = (
         '\n[[project]]\nrepo = "made-up-example"\nkind = "work"\nmetrics = false\n'
         'title = "A made-up example"\nsummary = "Only here for a test."\n'
@@ -99,13 +121,24 @@ def test_a_new_work_project_gets_a_card_with_no_template_change(
     config_path.write_text(
         build_module.CONFIG_PATH.read_text(encoding="utf-8") + extra, encoding="utf-8"
     )
+    content = tmp_path / "content"
+    shutil.copytree(build_module.CONTENT_DIR, content)
     monkeypatch.setattr(build_module, "CONFIG_PATH", config_path)
+    monkeypatch.setattr(build_module, "CONTENT_DIR", content)
     monkeypatch.setattr(build_module, "SITE_DIR", tmp_path / "_site")
     monkeypatch.setattr(build_module, "BUILD_MD_DIR", tmp_path / "_build" / "md")
+
+    # With no page of its own, the build stops: no card without a page.
+    with pytest.raises(build_module.BuildError, match="missing content"):
+        build_module.build(offline=True)
+
+    (content / "projects" / "made-up-example.md").write_text(MADE_UP_PAGE, encoding="utf-8")
     build_module.build(offline=True)
     html = (tmp_path / "_site" / "index.html").read_text(encoding="utf-8")
     ids = re.findall(r'<article class="proj" id="([^"]+)">', html)
     assert ids == ["credit-risk-scorecard", "bank-filings-rag", "made-up-example", "second-look"]
+    assert 'href="projects/made-up-example.html"' in html
+    assert (tmp_path / "_site" / "projects" / "made-up-example.html").is_file()
 
 
 # ------------------------------------------------------------------ site.js

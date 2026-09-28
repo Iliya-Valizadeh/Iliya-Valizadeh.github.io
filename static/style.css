@@ -166,6 +166,30 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   color:var(--gold);margin-top:22px}
 .seek p{margin-top:18px;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--ink)}
 
+/* project pages (ADR 0008) */
+#case{padding-top:150px}
+.ctitle{font-size:clamp(2.4rem,5.6vw,4.4rem);line-height:1.02}
+#case .sub{margin-top:18px}
+#case .plinks a{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink);border-bottom:1px solid var(--gold);padding-bottom:2px}
+.case{max-width:720px;color:var(--ink2);font-size:16px}
+.case h2{font-size:clamp(1.5rem,3vw,2rem);color:var(--ink);margin:46px 0 14px}
+.case h2:first-child{margin-top:0}
+.case p,.case ul,.case ol,.case table{margin-bottom:14px}
+.case ul,.case ol{padding-left:22px}
+.case li+li{margin-top:6px}
+.case a{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.case a:hover{color:var(--gold)}
+.case strong{font-weight:500;color:var(--ink)}
+.case code{font-family:var(--mono);font-size:.88em}
+.case table{border-collapse:collapse;width:100%;font-size:14.5px}
+.case th,.case td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+.case th{font-weight:500;color:var(--ink)}
+.weak{margin:40px 0;padding:22px 26px;background:var(--goldsoft);border-left:3px solid var(--gold)}
+.weak h2{margin-top:0}
+.weak p:last-child,.weak ul:last-child{margin-bottom:0}
+@media(max-width:640px){.case table{display:block;overflow-x:auto}}
+
 .about{display:grid;grid-template-columns:1.35fr .95fr;gap:74px;align-items:start}
 @media(max-width:880px){.about{grid-template-columns:1fr;gap:42px}}
 .about p{margin-bottom:21px;color:var(--ink2);font-size:15.5px}
