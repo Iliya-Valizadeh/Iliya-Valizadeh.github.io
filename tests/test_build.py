@@ -34,10 +34,18 @@ def test_home_page_has_no_unfilled_placeholder(built_site: Path) -> None:
     assert "}}" not in html
 
 
-def test_home_page_includes_every_kept_section(built_site: Path) -> None:
-    html = (built_site / "index.html").read_text(encoding="utf-8")
-    for section_id in ("about", "risk", "fit", "work"):
-        assert f'<section id="{section_id}">' in html
+@pytest.mark.parametrize(
+    ("page", "sections"),
+    [
+        ("index.html", ("risk", "fit", "work", "contact")),
+        ("about.html", ("about", "now", "contact")),
+    ],
+)
+def test_each_page_has_its_sections(built_site: Path, page: str, sections: tuple[str, ...]) -> None:
+    html = (built_site / page).read_text(encoding="utf-8")
+    for section_id in sections:
+        assert html.count(f'<section id="{section_id}">') == 1
+    assert "{{" not in html
 
 
 def test_verification_file_is_copied_byte_for_byte(built_site: Path) -> None:

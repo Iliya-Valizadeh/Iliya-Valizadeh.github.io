@@ -20,7 +20,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 ARCHIVE = ROOT / "docs" / "archive" / "index-2026-09.html"
-KEPT_SECTIONS = ["about", "risk", "fit"]
+# Which built page each kept section lives on (ADR 0007).
+KEPT_SECTIONS = {"about": "about.html", "risk": "index.html", "fit": "index.html"}
 
 
 def section_words(html: str, section_id: str) -> str:
@@ -42,10 +43,12 @@ def built_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return site_dir
 
 
-@pytest.mark.parametrize("section_id", KEPT_SECTIONS)
-def test_kept_section_reads_the_same_as_the_archive(built_site: Path, section_id: str) -> None:
+@pytest.mark.parametrize(("section_id", "page"), sorted(KEPT_SECTIONS.items()))
+def test_kept_section_reads_the_same_as_the_archive(
+    built_site: Path, section_id: str, page: str
+) -> None:
     archive_html = ARCHIVE.read_text(encoding="utf-8")
-    built_html = (built_site / "index.html").read_text(encoding="utf-8")
+    built_html = (built_site / page).read_text(encoding="utf-8")
     assert section_words(built_html, section_id) == section_words(archive_html, section_id)
 
 

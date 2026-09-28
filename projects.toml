@@ -1,21 +1,49 @@
-# Config for build.py's number pipeline, per docs/decisions/0001, 0002 and 0003.
+# The projects the site shows and the numbers it may use, per docs/decisions/0001,
+# 0002, 0003 and 0007.
 #
-# Same shape as the profile repo's projects.toml, because both read the same schema
-# with the shared code in scripts/shared/render_readme.py (ADR 0002). `kind` is this
-# site's own addition (ADR 0003): "work" gets a case-study page, "tool" gets a "For
-# everyone" page, "standard" gets a link and no card and no number. No page today
-# uses any of the `[[project.number]]` placeholders below; that starts in the Home
-# and project-page tasks. This file exists now so the fetch/match/format pipeline
-# (scripts/check_numbers.py, scripts/build_sources.py) has real config to run and
-# test against, per ADR 0002's number-flow design.
+# The number entries have the same shape as the profile repo's projects.toml, because
+# both are read by the shared code in scripts/shared/render_readme.py (ADR 0002). The
+# rest is this site's own, read by build.py:
+#
+# - `kind` (ADR 0003): "work" and "tool" get a card on the Home page, in that order.
+#   "standard" gets a link from the Home page text and no card, number or flag.
+# - `title`, `tags`, `summary`, `finding`, `headline`: the card's words, in Markdown.
+#   They may use `{{ id }}` number placeholders defined below. A sentence that uses a
+#   number marked `synthetic = true` must say "synthetic", or the build stops.
+# - `metric` and `metric_label`: the one number shown large on the card, and its label.
+# - `[[project.flag]]`: a true/false value in metrics.json, shown as one of two
+#   sentences (`if_true`, `if_false`). The finding uses it by its `id`.
 #
 # `metrics = false` means the repo has no reports/metrics.json: no metrics_file, no
-# numbers, no headline. Per ADR 0003, `fraud-review-queue` has no entry here.
+# numbers, no headline. Per ADR 0003, a project that does not exist yet has no entry.
 
 [[project]]
 repo = "credit-risk-scorecard"
 kind = "work"
 metrics_file = "reports/metrics.json"
+title = "Credit risk model"
+tags = ["Python", "LightGBM", "scikit-learn", "Calibration", "SHAP"]
+summary = """
+A model that ranks loan applicants by the risk that they miss payments, then turns
+that score into a probability. It uses the public Home Credit data from Kaggle.
+"""
+finding = """
+The class weighting I added pushed the average predicted chance of default to
+{{ credit_risk_scorecard.raw_mean_pd }}, against a real default rate of
+{{ credit_risk_scorecard.observed_default_rate }} on the test set. Calibrating on
+held-out data brought it to {{ credit_risk_scorecard.isotonic_mean_pd }} and left the
+ranking almost the same. Gender is no longer a model input, but other inputs still
+carry it, and the repo shows which ones.
+"""
+headline = """
+How well it ranks risky applicants above safe ones
+([ROC-AUC](https://github.com/Iliya-Valizadeh/credit-risk-scorecard/blob/main/docs/glossary.md#roc-auc)):
+{{ credit_risk_scorecard.lightgbm_roc_auc }} on the test set (interval
+{{ credit_risk_scorecard.lightgbm_roc_auc_lo }} to {{ credit_risk_scorecard.lightgbm_roc_auc_hi }}),
+against {{ credit_risk_scorecard.logreg_roc_auc }} for a logistic regression baseline.
+"""
+metric = "credit_risk_scorecard.lightgbm_roc_auc"
+metric_label = "ROC-AUC on the test set"
 
 [[project.number]]
 id = "credit_risk_scorecard.lightgbm_roc_auc"
@@ -48,10 +76,47 @@ row = "Observed default rate on test"
 decimals = 2
 percent = true
 
+[[project.number]]
+id = "credit_risk_scorecard.raw_mean_pd"
+path = "calibration.raw.mean_pd"
+row = "Calibration table (raw, Platt, isotonic)"
+decimals = 1
+percent = true
+
+[[project.number]]
+id = "credit_risk_scorecard.isotonic_mean_pd"
+path = "calibration.isotonic.mean_pd"
+row = "Calibration table (raw, Platt, isotonic)"
+decimals = 1
+percent = true
+
 [[project]]
 repo = "bank-filings-rag"
 kind = "work"
 metrics_file = "reports/metrics.json"
+title = "Document question answering"
+tags = ["Python", "Retrieval", "BM25 + embeddings", "Evaluation"]
+summary = """
+Answers questions about RBC's 2024 Annual Report and names the page each answer came
+from. The text is turned into vectors on my own machine, not sent to a hosted service.
+"""
+finding = """
+The model that turns text into vectors reads only the start of each page, and most
+pages are much longer than that. So search by meaning over whole pages mostly sees the
+top of each page. A model that reads more could change which setup wins.
+"""
+headline = """
+How often the right page is in the top five
+([hit@5](https://github.com/Iliya-Valizadeh/bank-filings-rag/blob/main/docs/glossary.md#hit5)):
+{{ bank_filings_rag.hit5 }} ({{ bank_filings_rag.interval_level }} interval
+{{ bank_filings_rag.hit5_lo }} to {{ bank_filings_rag.hit5_hi }}) on
+{{ bank_filings_rag.n_verified }} hand-checked questions, against
+{{ bank_filings_rag.baseline_hit5 }} ({{ bank_filings_rag.baseline_hit5_lo }} to
+{{ bank_filings_rag.baseline_hit5_hi }}) for fixed-size chunks. The intervals overlap,
+so no setup clearly wins yet.
+"""
+metric = "bank_filings_rag.hit5"
+metric_label = "hit@5 on hand-checked questions"
 
 [[project.number]]
 id = "bank_filings_rag.hit5"
@@ -78,6 +143,25 @@ row = "[Baseline](docs/glossary.md#baseline) hit@5, fixed chunks + dense, 12 que
 decimals = 2
 
 [[project.number]]
+id = "bank_filings_rag.baseline_hit5_lo"
+path = "headline.baseline.ci_low"
+row = "[Baseline](docs/glossary.md#baseline) hit@5, fixed chunks + dense, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.baseline_hit5_hi"
+path = "headline.baseline.ci_high"
+row = "[Baseline](docs/glossary.md#baseline) hit@5, fixed chunks + dense, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.interval_level"
+path = "interval.level"
+row = "Confidence level for every interval"
+decimals = 0
+percent = true
+
+[[project.number]]
 id = "bank_filings_rag.n_verified"
 path = "n_questions.verified"
 row = "Hand-checked questions"
@@ -88,6 +172,40 @@ repo = "second-look"
 kind = "tool"
 live_url = "https://iliya-valizadeh.github.io/second-look/"
 metrics_file = "reports/metrics.json"
+title = "second-look"
+tags = ["Python", "Pyodide", "Runs in the browser", "Evaluation"]
+summary = """
+Reads a bank or card statement in your browser and flags charges worth a second look:
+subscriptions, price rises, double charges and odd spending. Each flag comes with one
+plain sentence, and nothing is uploaded. The live page scores
+{{ second_look.lighthouse_performance }} for performance and
+{{ second_look.lighthouse_accessibility }} for accessibility in Lighthouse (mobile
+setting, first screen only).
+"""
+finding = "{{ second_look.failure_bar_passed }}"
+headline = """
+Share of planted recurring charges it finds
+([recall](https://github.com/Iliya-Valizadeh/second-look/blob/main/docs/glossary.md#recall)),
+on synthetic statements only: {{ second_look.recurring_recall }}
+({{ second_look.interval_level }} interval {{ second_look.recurring_recall_lo }} to
+{{ second_look.recurring_recall_hi }}), against {{ second_look.baseline_recurring_recall }}
+for a simple baseline.
+"""
+metric = "second_look.recurring_recall"
+metric_label = "recurring recall, synthetic statements"
+
+[[project.flag]]
+id = "second_look.failure_bar_passed"
+path = "failure_bar.passed"
+if_true = """
+It met the bar I set for it before I saw any result.
+"""
+if_false = """
+It did not meet the bar I set for it before I saw any result. One check that fell
+short: on synthetic statements, {{ second_look.recurring_precision }} of its
+recurring-charge flags are right, which is below the bar. The repo reports this
+instead of moving the bar.
+"""
 
 [[project.number]]
 id = "second_look.recurring_recall"
@@ -114,7 +232,8 @@ synthetic = true
 id = "second_look.recurring_precision"
 path = "engine.recurring.precision.value"
 row = "Recurring precision"
-decimals = 4
+decimals = 1
+percent = true
 synthetic = true
 
 [[project.number]]
@@ -123,6 +242,26 @@ path = "baseline.recurring.recall.value"
 row = "Baseline recurring precision and recall"
 decimals = 4
 synthetic = true
+
+[[project.number]]
+id = "second_look.interval_level"
+path = "interval.level"
+row = "Interval level"
+decimals = 0
+percent = true
+synthetic = true
+
+[[project.number]]
+id = "second_look.lighthouse_performance"
+path = "lighthouse.performance"
+row = "Lighthouse scores on the live page, mobile setting, first screen only: performance, accessibility"
+decimals = 0
+
+[[project.number]]
+id = "second_look.lighthouse_accessibility"
+path = "lighthouse.accessibility"
+row = "Lighthouse scores on the live page, mobile setting, first screen only: performance, accessibility"
+decimals = 0
 
 [[project]]
 repo = "ds-project-standard"
