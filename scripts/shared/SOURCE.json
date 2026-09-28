@@ -1,0 +1,8 @@
+{
+  "source_repo": "https://github.com/Iliya-Valizadeh/Iliya-Valizadeh",
+  "source_commit": "d8da834f8ec495d489de6f3bdeea6bda846af3b8",
+  "note": "render_readme.py is copied byte for byte from scripts/render_readme.py in the profile repo at the source commit, per docs/decisions/0002-where-each-number-comes-from.md's 'Shared code' rule: the fetching, row matching and number formatting are written once there and copied here. This site does not use render_readme.py's project_table()/TABLE_TOKEN helpers (those are README-specific); it reuses the fetcher classes, load_config, json_value, format_number, source_matches, value_cell_matches and parse_claims_table. Do not edit the copy here. tests/test_shared_numbers.py fails if it no longer matches this SHA-256.",
+  "files": {
+    "render_readme.py": "04f79d4e96f6cb83c4f3461b5cacbfdcdaff83012a5b0bb23cb962e9d1207e63"
+  }
+}

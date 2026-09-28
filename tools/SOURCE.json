@@ -1,0 +1,13 @@
+{
+  "source_repo": "https://github.com/Iliya-Valizadeh/ds-project-standard",
+  "source_commit": "602ec779782c7466703a2093832e0e091c3316b8",
+  "note": "Files below are copied byte for byte from tools/ at the source commit. Do not edit them here (see docs/decisions/0004-checks.md). tests/test_vendored_tools.py fails if a copy no longer matches this SHA-256.",
+  "files": {
+    "_markdown.py": "e992780e958dd1d25688f8d00855025f5f49a0e04b33d0a2a864fc6887ececdb",
+    "ai_signs_check.py": "c5d68f1c279d499974e7902bbc4c373d7ee865235048c15a385adf734b04d386",
+    "readability_check.py": "b9122476b77adc472d2f8a2cfeb55af15242a3684da6c185685aba844112b295",
+    "claims_check.py": "bf015884709c74e5aa01db0025a978a4f349bc4d5ff9284cb6d4c0dcc359746a",
+    "links_check.py": "e592c58182e0d3ddf3926c6d1b41b5a1f1e3b49a80be19ee9f2e3c432909ae5a",
+    "lychee.toml": "0061765811e219012f9c79885762f048e6ea773e358d96c7de0f9314ca75a03f"
+  }
+}
