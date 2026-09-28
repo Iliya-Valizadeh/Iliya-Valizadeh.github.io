@@ -1,0 +1,150 @@
+name: Build and deploy the site to Pages
+
+# Per docs/decisions/0001-a-small-python-build-deployed-by-actions.md:
+# - Runs on pushes to `main`, on a daily schedule (numbers stay in sync with the
+#   source repos even with no push) and on workflow_dispatch. Never on other
+#   branches: this workflow has no `branches:` filter on `push` other than `main`.
+# - The `check` job asks the Pages API whether this repo's Pages source is set to
+#   "GitHub Actions". If not, `build` and `deploy` are skipped, not failed, so an
+#   unconfigured repo shows a skipped run instead of emailing anyone (the same
+#   pattern as second-look's pages.yml). Someone with repo admin access still has to
+#   turn this on in Settings > Pages first; the merge task at the end of this phase
+#   does that.
+# - `build` runs every ADR 0004 check against the live source files (no --offline),
+#   so a bad number, a broken link or a stray Hack the North mention stops the
+#   deploy: nothing is uploaded, and the last good site stays up.
+# - `deploy` also checks the ref is refs/heads/main, on top of the `check` job and
+#   the `on: push: branches: [main]` filter, so a scheduled or dispatched run on any
+#   other ref never publishes.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check whether GitHub Pages is configured for this repo
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${{ github.repository }}/pages" --jq .build_type 2>/dev/null | grep -q workflow; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::GitHub Pages isn't set to the Actions build source yet (Settings > Pages > Source: GitHub Actions). Skipping build and deploy; expected until that's set up."
+          fi
+
+  build:
+    needs: check
+    if: needs.check.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: true
+
+      - name: Install pinned packages
+        run: uv sync --locked
+
+      - name: Lint and format (ruff)
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Types (mypy)
+        run: uv run mypy build.py scripts/check_numbers.py scripts/__init__.py tests/
+
+      - name: Tests (pytest, coverage of build.py and scripts/, offline)
+        run: uv run pytest
+
+      - name: Build the site from the live source repos (real numbers, not fixtures)
+        run: uv run python build.py
+
+      - name: Vendored-tools guard (byte for byte, per ADR 0004)
+        run: uv run pytest tests/test_vendored_tools.py tests/test_shared_numbers.py
+
+      - name: AI-writing signs (zero flags)
+        run: uv run python tools/ai_signs_check.py docs
+        env:
+          PYTHONPATH: tools
+
+      - name: Readability
+        run: uv run python tools/readability_check.py docs
+        env:
+          PYTHONPATH: tools
+
+      - name: Numbers check (every number in _build/md came from a placeholder)
+        run: uv run python scripts/check_numbers.py _build/md
+
+      - name: Local links
+        run: uv run python tools/links_check.py docs
+        env:
+          PYTHONPATH: tools
+
+      - name: Hack the North and "fraud" guards, unfilled-placeholder guard
+        run: uv run pytest tests/test_guards.py
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: false
+
+      - name: Upload the built _site/ as the Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: [check, build]
+    if: needs.check.outputs.enabled == 'true' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  site-links:
+    needs: check
+    if: needs.check.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: true
+
+      - name: Install pinned packages
+        run: uv sync --locked
+
+      - name: Build the site, so lychee has a real _site/ to check
+        run: uv run python build.py
+
+      - name: Web link check (lychee), over the built site and the docs
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --config tools/lychee.toml './_site/**/*.html' './**/*.md'
+          fail: true
