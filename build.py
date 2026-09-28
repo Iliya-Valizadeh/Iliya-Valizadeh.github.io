@@ -24,6 +24,11 @@ docs/decisions/0007-home-and-about-pages.md and docs/decisions/0008-project-page
 - Beyond the shared code, a number may come from a second results file, from a list
   item in a JSON path, from a Value cell with thousands commas, or, as a row entry,
   from the Value cell itself when its Source is not a JSON file (ADR 0008).
+- Each `notes/*.md` file is a note. Its first line of text is either
+  `DRAFT: Iliya to edit` or `Published: YYYY-MM-DD` (ADR 0005). A draft never reaches
+  `_site/`: its Markdown goes to `_build/md/drafts/` for the checks, and its page to
+  `_build/preview/` for reading. After the build, the marker anywhere in `_site/`
+  fails it. A `<!-- chart: name -->` line in a note draws a chart from built numbers.
 - Output goes to `_site/` (what is deployed) and `_build/md/` (each page's prose as
   filled-in Markdown, for the writing and number checks). Both are gitignored.
 - `static/` is copied unchanged, and `googleb968c9a0c91c49c6.html` is copied byte for
@@ -42,6 +47,7 @@ import shutil
 import sys
 import tomllib
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -74,7 +80,13 @@ PARTIALS_DIR = ROOT / "partials"
 CONTENT_DIR = ROOT / "content"
 STATIC_DIR = ROOT / "static"
 CONFIG_PATH = ROOT / "projects.toml"
+NOTES_DIR = ROOT / "notes"
 VERIFICATION_FILE = "googleb968c9a0c91c49c6.html"
+
+# ADR 0005: a note whose first line of text starts with this is a draft.
+DRAFT_MARKER = "DRAFT: Iliya to edit"
+PUBLISHED_RE = re.compile(r"^Published: (\d{4}-\d{2}-\d{2})$")
+CHART_RE = re.compile(r"^<!--\s*chart:\s*([a-z0-9_]+)\s*-->[ \t]*$", re.M)
 
 PLACEHOLDER_RE = re.compile(r"\{\{\s*([a-zA-Z0-9_]+)\s*\}\}")
 SLOT_RE = re.compile(r"^<!--\s*slot:\s*([a-z0-9_]+)\s*-->[ \t]*$", re.M)
@@ -422,6 +434,16 @@ def read_content(name: str) -> tuple[dict[str, str], dict[str, str]]:
     if not path.is_file():
         raise BuildError(f"missing content file: {path}")
     text = path.read_text(encoding="utf-8").replace("\r\n", "\n")
+    front, text = parse_front_matter(text, path)
+    parts = SLOT_RE.split(text)
+    if parts[0].strip():
+        raise BuildError(f"{path}: text before the first '<!-- slot: name -->' line")
+    slots = {parts[i]: parts[i + 1].strip() for i in range(1, len(parts), 2)}
+    return front, slots
+
+
+def parse_front_matter(text: str, path: Path) -> tuple[dict[str, str], str]:
+    """Split off the `---` front matter. It must give a title and a description."""
     front: dict[str, str] = {}
     match = FRONT_MATTER_RE.match(text)
     if match:
@@ -431,14 +453,10 @@ def read_content(name: str) -> tuple[dict[str, str], dict[str, str]]:
                 raise BuildError(f"{path}: front matter line has no ':': {line!r}")
             front[key.strip()] = value.strip()
         text = text[match.end() :]
-    parts = SLOT_RE.split(text)
-    if parts[0].strip():
-        raise BuildError(f"{path}: text before the first '<!-- slot: name -->' line")
-    slots = {parts[i]: parts[i + 1].strip() for i in range(1, len(parts), 2)}
     for key in ("title", "description"):
         if key not in front:
             raise BuildError(f"{path}: front matter needs '{key}'")
-    return front, slots
+    return front, text
 
 
 def markdown_html(text: str) -> str:
@@ -608,6 +626,188 @@ def build_page(
     return rendered, "\n\n".join(md_parts) + "\n"
 
 
+# ---------------------------------------------------------------------------- notes
+
+
+@dataclass(frozen=True)
+class Note:
+    """One note from `notes/`, as a full HTML page and as filled-in Markdown."""
+
+    slug: str
+    published: str  # "" while the note is a draft (ADR 0005)
+    html: str
+    md: str
+
+    @property
+    def draft(self) -> bool:
+        return not self.published
+
+
+def note_status(text: str, path: Path) -> tuple[str, str]:
+    """A note's publish date ("" for a draft), and its text after that first line.
+
+    Per ADR 0005, the first line of text (a byte order mark and blank lines before it
+    are ignored) is either the draft marker or `Published: YYYY-MM-DD`. The marker
+    anywhere else fails the build, and so does a note with neither line.
+    """
+    lines = text.lstrip("﻿").replace("\r\n", "\n").split("\n")
+    while lines and not lines[0].strip():
+        lines.pop(0)
+    first = lines[0].strip() if lines else ""
+    rest = "\n".join(lines[1:])
+    if DRAFT_MARKER in rest or DRAFT_MARKER in first[len(DRAFT_MARKER) :]:
+        raise BuildError(f"{path}: '{DRAFT_MARKER}' may only start the first line of text")
+    if first.startswith(DRAFT_MARKER):
+        return "", rest
+    match = PUBLISHED_RE.match(first)
+    if match is None:
+        raise BuildError(
+            f"{path}: the first line must be '{DRAFT_MARKER}' or 'Published: YYYY-MM-DD'"
+        )
+    try:
+        date.fromisoformat(match.group(1))
+    except ValueError as exc:
+        raise BuildError(f"{path}: '{first}' is not a real date") from exc
+    return match.group(1), rest
+
+
+def word_pieces_chart(numbers: Numbers) -> tuple[str, str]:
+    """A median bank-filings-rag page drawn to scale, with the part the model reads filled.
+
+    Both lengths are the repo's own CLAIMS.md row entries (ADR 0002). The chart only
+    scales them to a width. It shows no number of its own.
+    """
+    limit_text = numbers.values.get("bank_filings_rag.word_piece_limit", "")
+    median_text = numbers.values.get("bank_filings_rag.median_word_pieces", "")
+    if not (limit_text and median_text):
+        raise BuildError("the word-piece chart needs the limit and the median page length")
+    limit, median = Decimal(limit_text), Decimal(median_text)
+    if not 0 < limit < median:
+        raise BuildError("the word-piece chart needs a limit below the median page length")
+    left, width, gap = 20, 360, 2
+    read = round(float(width * limit / median), 1)
+    rest_x, rest_w = left + read + gap, round(width - read - gap, 1)
+    end = left + width
+    label = (
+        f"A bar for a median page of {median_text} word pieces. The first {limit_text} "
+        "word pieces, the part the search model reads, are filled in. The rest is empty."
+    )
+    svg = (
+        f'<svg viewBox="0 0 400 118" role="img" aria-label="{html.escape(label, quote=True)}">\n'
+        f'  <text class="chart-label" x="{left}" y="30">Read: first {limit_text}</text>\n'
+        f'  <text class="chart-label" x="{end}" y="30" text-anchor="end">'
+        "Not read: the rest</text>\n"
+        f'  <rect class="chart-read" x="{left}" y="40" width="{read}" height="30" rx="3">'
+        f"<title>Read by the model: word pieces 1 to {limit_text}</title></rect>\n"
+        f'  <rect class="chart-rest" x="{rest_x}" y="40" width="{rest_w}" height="30" rx="3">'
+        f"<title>Never read: everything after word piece {limit_text}</title></rect>\n"
+        f'  <text class="chart-tick" x="{left}" y="88">0</text>\n'
+        f'  <text class="chart-tick" x="{left + read}" y="88" text-anchor="middle">'
+        f"{limit_text}</text>\n"
+        f'  <text class="chart-tick" x="{end}" y="88" text-anchor="end">{median_text}</text>\n'
+        f'  <text class="chart-axis" x="{left + width / 2}" y="110" text-anchor="middle">'
+        "word pieces on a median page</text>\n"
+        "</svg>"
+    )
+    md = (
+        f"Chart: one bar for a median page of {median_text} word pieces. The first "
+        f"{limit_text} word pieces, the part the search model reads, are filled in."
+    )
+    return svg, md
+
+
+CHARTS = {"word_pieces": word_pieces_chart}
+
+
+def note_body(body: str, numbers: Numbers, where: str) -> tuple[str, str]:
+    """A note's filled-in body as HTML and as Markdown, with each chart line drawn.
+
+    A `<!-- chart: name -->` line becomes that chart, and the paragraph right after it
+    becomes its caption. Every chart needs one.
+    """
+    parts = CHART_RE.split(body)
+    html_parts = [markdown_html(parts[0])]
+    md_parts = [parts[0].strip()]
+    for i in range(1, len(parts), 2):
+        name = parts[i]
+        if name not in CHARTS:
+            raise BuildError(f"{where}: unknown chart '{name}'")
+        caption, _, after = parts[i + 1].strip().partition("\n\n")
+        if not caption.strip():
+            raise BuildError(f"{where}: chart '{name}' needs a caption paragraph after it")
+        svg, chart_md = CHARTS[name](numbers)
+        caption_html = MARKDOWN.renderInline(caption.strip())
+        html_parts.append(
+            f'<figure class="chart">\n{svg}\n<figcaption>{caption_html}</figcaption>\n</figure>'
+        )
+        md_parts += [chart_md, caption.strip()]
+        if after.strip():
+            html_parts.append(markdown_html(after))
+            md_parts.append(after.strip())
+    return "\n".join(html_parts), "\n\n".join(p for p in md_parts if p)
+
+
+def build_note(path: Path, numbers: Numbers, flags: dict[str, Flag]) -> Note:
+    """One note as a page in `notes/`, and its prose as filled-in Markdown."""
+    published, rest = note_status(path.read_text(encoding="utf-8"), path)
+    front, body = parse_front_matter(rest.lstrip("\n"), path)
+    where = f"notes/{path.name}"
+    body_html, body_md = note_body(fill_text(body, numbers, flags, where), numbers, where)
+    title = html.escape(front["title"])
+    context = {
+        "home": "../index.html",
+        "root": "../",
+        "contact_label": "02 / CONTACT",
+        "script": "../static/site.js",
+        "page_title": f"{title} | Iliya Valizadeh",
+        "page_description": html.escape(front["description"], quote=True),
+        "page_label": "01 / NOTE",
+        "note_title": title,
+        "note_status": f"Published {published}" if published else "Draft, not published",
+        "note_body": body_html,
+    }
+    parts = ("nav", "note", "contact")
+    context["body"] = "\n\n".join(render_template(load_partial(n), context) for n in parts)
+    shell = (TEMPLATES_DIR / "page.html").read_text(encoding="utf-8")
+    rendered = render_template(shell, context)
+    if "{{" in rendered:
+        raise BuildError(f"a placeholder was left unfilled in {where}")
+    md = "\n\n".join([f"Page title: {front['title']}.", front["description"], body_md]) + "\n"
+    return Note(slug=path.stem, published=published, html=rendered, md=md)
+
+
+def write_notes(notes: list[Note]) -> None:
+    """Published notes go to `_site/notes/`. Drafts never do (ADR 0005).
+
+    A draft's Markdown goes to `_build/md/drafts/notes/`, where the writing and number
+    checks read it, and its page to `_build/preview/notes/` for reading before it is
+    published. Neither folder is deployed.
+    """
+    preview_dir = BUILD_MD_DIR.parent / "preview"
+    if preview_dir.exists():
+        shutil.rmtree(preview_dir)
+    for note in notes:
+        if note.draft:
+            md_path = BUILD_MD_DIR / "drafts" / "notes" / f"{note.slug}.md"
+            html_path = preview_dir / "notes" / f"{note.slug}.html"
+        else:
+            md_path = BUILD_MD_DIR / "notes" / f"{note.slug}.md"
+            html_path = SITE_DIR / "notes" / f"{note.slug}.html"
+        for path, text in ((html_path, note.html), (md_path, note.md)):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8", newline="\n")
+    if any(n.draft for n in notes):
+        copy_static(preview_dir)
+
+
+def check_no_draft_marker(site_dir: Path) -> None:
+    """Fail if the draft marker reached any built file (ADR 0005's final scan)."""
+    marker = DRAFT_MARKER.encode("utf-8")
+    for path in sorted(site_dir.rglob("*")):
+        if path.is_file() and marker in path.read_bytes():
+            raise BuildError(f"{path}: the draft marker reached the built site (ADR 0005)")
+
+
 def copy_static(site_dir: Path) -> None:
     dest = site_dir / "static"
     if dest.exists():
@@ -631,6 +831,7 @@ def build(offline: bool) -> None:
 
     all_pages = [*PAGES, *project_pages(site)]
     pages = [(page, *build_page(page, numbers, site, flags)) for page in all_pages]
+    notes = [build_note(path, numbers, flags) for path in sorted(NOTES_DIR.glob("*.md"))]
 
     if SITE_DIR.exists():
         shutil.rmtree(SITE_DIR)
@@ -648,6 +849,8 @@ def build(offline: bool) -> None:
     copy_verification_file(SITE_DIR)
     sources_text = json.dumps(numbers.sources, indent=2, sort_keys=True) + "\n"
     (SITE_DIR / "sources.json").write_text(sources_text, encoding="utf-8", newline="\n")
+    write_notes(notes)
+    check_no_draft_marker(SITE_DIR)
 
 
 def main(argv: list[str] | None = None) -> int:
