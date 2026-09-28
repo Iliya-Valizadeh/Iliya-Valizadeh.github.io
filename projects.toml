@@ -1,0 +1,135 @@
+# Config for build.py's number pipeline, per docs/decisions/0001, 0002 and 0003.
+#
+# Same shape as the profile repo's projects.toml, because both read the same schema
+# with the shared code in scripts/shared/render_readme.py (ADR 0002). `kind` is this
+# site's own addition (ADR 0003): "work" gets a case-study page, "tool" gets a "For
+# everyone" page, "standard" gets a link and no card and no number. No page today
+# uses any of the `[[project.number]]` placeholders below; that starts in the Home
+# and project-page tasks. This file exists now so the fetch/match/format pipeline
+# (scripts/check_numbers.py, scripts/build_sources.py) has real config to run and
+# test against, per ADR 0002's number-flow design.
+#
+# `metrics = false` means the repo has no reports/metrics.json: no metrics_file, no
+# numbers, no headline. Per ADR 0003, `fraud-review-queue` has no entry here.
+
+[[project]]
+repo = "credit-risk-scorecard"
+kind = "work"
+metrics_file = "reports/metrics.json"
+
+[[project.number]]
+id = "credit_risk_scorecard.lightgbm_roc_auc"
+path = "models.lightgbm.roc_auc"
+row = "[ROC-AUC](docs/glossary.md#roc-auc) and [PR-AUC](docs/glossary.md#pr-auc) by model, with 95% intervals"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.lightgbm_roc_auc_lo"
+path = "bootstrap.roc_auc.lightgbm.lo"
+row = "[ROC-AUC](docs/glossary.md#roc-auc) and [PR-AUC](docs/glossary.md#pr-auc) by model, with 95% intervals"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.lightgbm_roc_auc_hi"
+path = "bootstrap.roc_auc.lightgbm.hi"
+row = "[ROC-AUC](docs/glossary.md#roc-auc) and [PR-AUC](docs/glossary.md#pr-auc) by model, with 95% intervals"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.logreg_roc_auc"
+path = "models.logreg.roc_auc"
+row = "[ROC-AUC](docs/glossary.md#roc-auc) and [PR-AUC](docs/glossary.md#pr-auc) by model, with 95% intervals"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.observed_default_rate"
+path = "calibration.observed_default_rate_test"
+row = "Observed default rate on test"
+decimals = 2
+percent = true
+
+[[project]]
+repo = "bank-filings-rag"
+kind = "work"
+metrics_file = "reports/metrics.json"
+
+[[project.number]]
+id = "bank_filings_rag.hit5"
+path = "headline.model.value"
+row = "Headline [hit@5](docs/glossary.md#hit5), whole pages + hybrid, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.hit5_lo"
+path = "headline.model.ci_low"
+row = "Headline [hit@5](docs/glossary.md#hit5), whole pages + hybrid, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.hit5_hi"
+path = "headline.model.ci_high"
+row = "Headline [hit@5](docs/glossary.md#hit5), whole pages + hybrid, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.baseline_hit5"
+path = "headline.baseline.value"
+row = "[Baseline](docs/glossary.md#baseline) hit@5, fixed chunks + dense, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.n_verified"
+path = "n_questions.verified"
+row = "Hand-checked questions"
+decimals = 0
+
+[[project]]
+repo = "second-look"
+kind = "tool"
+live_url = "https://iliya-valizadeh.github.io/second-look/"
+metrics_file = "reports/metrics.json"
+
+[[project.number]]
+id = "second_look.recurring_recall"
+path = "engine.recurring.recall.value"
+row = "Recurring recall"
+decimals = 4
+synthetic = true
+
+[[project.number]]
+id = "second_look.recurring_recall_lo"
+path = "engine.recurring.recall.ci_low"
+row = "Recurring recall"
+decimals = 4
+synthetic = true
+
+[[project.number]]
+id = "second_look.recurring_recall_hi"
+path = "engine.recurring.recall.ci_high"
+row = "Recurring recall"
+decimals = 4
+synthetic = true
+
+[[project.number]]
+id = "second_look.recurring_precision"
+path = "engine.recurring.precision.value"
+row = "Recurring precision"
+decimals = 4
+synthetic = true
+
+[[project.number]]
+id = "second_look.baseline_recurring_recall"
+path = "baseline.recurring.recall.value"
+row = "Baseline recurring precision and recall"
+decimals = 4
+synthetic = true
+
+[[project]]
+repo = "ds-project-standard"
+kind = "standard"
+metrics = false
+
+[[project]]
+repo = ".github"
+kind = "standard"
+metrics = false
