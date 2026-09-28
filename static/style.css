@@ -189,6 +189,13 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .weak h2{margin-top:0}
 .weak p:last-child,.weak ul:last-child{margin-bottom:0}
 @media(max-width:640px){.case table{display:block;overflow-x:auto}}
+.chart{margin:28px 0 30px}
+.chart svg{display:block;width:100%;max-width:560px;height:auto}
+.chart-read{fill:var(--gold)}
+.chart-rest{fill:var(--paper2);stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.chart-label{font-family:var(--mono);font-size:12px;fill:var(--ink)}
+.chart-tick,.chart-axis{font-family:var(--mono);font-size:11px;fill:var(--ink2)}
+.chart figcaption{margin-top:10px;font-size:14.5px;color:var(--ink2)}
 
 .about{display:grid;grid-template-columns:1.35fr .95fr;gap:74px;align-items:start}
 @media(max-width:880px){.about{grid-template-columns:1fr;gap:42px}}
