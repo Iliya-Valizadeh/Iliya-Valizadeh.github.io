@@ -85,6 +85,7 @@ def test_markdown_record_holds_every_page(built: tuple[Path, Path]) -> None:
     names = sorted(p.relative_to(built[1]).as_posix() for p in built[1].rglob("*.md"))
     assert names == [
         "about.md",
+        "drafts/notes/a-quarter-of-each-page.md",
         "for-everyone/second-look.md",
         "index.md",
         "projects/bank-filings-rag.md",
