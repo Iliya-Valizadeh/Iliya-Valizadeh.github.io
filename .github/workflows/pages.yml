@@ -83,12 +83,12 @@ jobs:
         run: uv run pytest tests/test_vendored_tools.py tests/test_shared_numbers.py
 
       - name: AI-writing signs (zero flags)
-        run: uv run python tools/ai_signs_check.py docs
+        run: uv run python tools/ai_signs_check.py docs _build/md CLAIMS.md
         env:
           PYTHONPATH: tools
 
       - name: Readability
-        run: uv run python tools/readability_check.py docs
+        run: uv run python tools/readability_check.py docs _build/md CLAIMS.md
         env:
           PYTHONPATH: tools
 
@@ -96,7 +96,7 @@ jobs:
         run: uv run python scripts/check_numbers.py _build/md
 
       - name: Local links
-        run: uv run python tools/links_check.py docs
+        run: uv run python tools/links_check.py docs CLAIMS.md
         env:
           PYTHONPATH: tools
 
