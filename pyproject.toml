@@ -1,0 +1,51 @@
+[project]
+name = "iliya-valizadeh-github-io"
+version = "0.1.0"
+description = "Builds the site (Iliya Valizadeh's GitHub Pages) from templates, partials and each project's own reports/metrics.json"
+readme = "README.md"
+requires-python = ">=3.11"
+# Per ADR 0001, build.py and scripts/ need nothing beyond the standard library at
+# run time.
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "mypy>=1.10",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.5",
+    "textstat>=0.7.4",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q --cov=build --cov=scripts --cov-report=term-missing --cov-fail-under=80"
+
+[tool.coverage.run]
+# scripts/shared/render_readme.py is vendored byte for byte from the profile repo
+# (ADR 0002) and is not scored here, the same way tools/ is excluded from ruff and
+# mypy (ADR 0004). Only the functions this repo actually calls need to be covered.
+omit = ["scripts/shared/*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+# tools/ and scripts/shared/ are copied byte for byte from other repos per ADR 0004
+# and ADR 0002, and are checked there, not here.
+extend-exclude = ["tools", "scripts/shared"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+exclude = ["tools", "scripts/shared"]
+# scripts/check_numbers.py imports tools/_markdown.py and tools/claims_check.py as
+# bare top-level modules (the same way they import each other), so mypy needs tools/
+# on its search path to resolve them, even though tools/ itself is not type-checked.
+mypy_path = ["tools"]
