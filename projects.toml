@@ -220,6 +220,127 @@ row = "Calibration table (raw, Platt, isotonic)"
 decimals = 1
 percent = true
 
+# Numbers for the two credit notes (ADR 0009). Raw and calibrated ranking, and the
+# illustrative expected loss.
+[[project.number]]
+id = "credit_risk_scorecard.raw_roc_auc"
+path = "calibration.raw.roc_auc"
+row = "Calibration table (raw, Platt, isotonic)"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.isotonic_roc_auc"
+path = "calibration.isotonic.roc_auc"
+row = "Calibration table (raw, Platt, isotonic)"
+decimals = 3
+
+[[project.number]]
+id = "credit_risk_scorecard.el_raw_pd"
+path = "expected_loss.el_raw_pd"
+row = "[Expected loss](docs/glossary.md#expected-loss) (raw, calibrated, implied)"
+decimals = 0
+thousands = true
+
+[[project.number]]
+id = "credit_risk_scorecard.el_calibrated_pd"
+path = "expected_loss.el_calibrated_pd"
+row = "[Expected loss](docs/glossary.md#expected-loss) (raw, calibrated, implied)"
+decimals = 0
+thousands = true
+
+[[project.number]]
+id = "credit_risk_scorecard.el_implied"
+path = "expected_loss.loss_implied_by_outcomes"
+row = "[Expected loss](docs/glossary.md#expected-loss) (raw, calibrated, implied)"
+decimals = 0
+thousands = true
+
+[[project.row_number]]
+id = "credit_risk_scorecard.lgd"
+row = "Assumed [LGD](docs/glossary.md#lgd)"
+index = 0
+
+# The gender note shows approval and false-positive rates as percentages.
+[[project.number]]
+id = "credit_risk_scorecard.approval_women_with_gender_pct"
+file = "reports/gender_check.json"
+path = "with_gender.gender.0.approval_rate"
+row = "Gender group decisions (approval, recall, false-positive rate)"
+decimals = 1
+percent = true
+
+[[project.number]]
+id = "credit_risk_scorecard.approval_men_with_gender_pct"
+file = "reports/gender_check.json"
+path = "with_gender.gender.1.approval_rate"
+row = "Gender group decisions (approval, recall, false-positive rate)"
+decimals = 1
+percent = true
+
+[[project.number]]
+id = "credit_risk_scorecard.approval_women_without_gender_pct"
+file = "reports/gender_check.json"
+path = "without_gender.gender.0.approval_rate"
+row = "Gender group decisions (approval, recall, false-positive rate)"
+decimals = 1
+percent = true
+
+[[project.number]]
+id = "credit_risk_scorecard.approval_men_without_gender_pct"
+file = "reports/gender_check.json"
+path = "without_gender.gender.1.approval_rate"
+row = "Gender group decisions (approval, recall, false-positive rate)"
+decimals = 1
+percent = true
+
+[[project.number]]
+id = "credit_risk_scorecard.fpr_women_with_gender"
+file = "reports/gender_check.json"
+path = "with_gender.gender.0.fpr"
+row = "Gender group decisions (approval, recall, false-positive rate)"
+decimals = 1
+percent = true
+
+[[project.number]]
+id = "credit_risk_scorecard.fpr_men_with_gender"
+file = "reports/gender_check.json"
+path = "with_gender.gender.1.fpr"
+row = "Gender group decisions (approval, recall, false-positive rate)"
+decimals = 1
+percent = true
+
+[[project.number]]
+id = "credit_risk_scorecard.fpr_women_without_gender"
+file = "reports/gender_check.json"
+path = "without_gender.gender.0.fpr"
+row = "Gender group decisions (approval, recall, false-positive rate)"
+decimals = 1
+percent = true
+
+[[project.number]]
+id = "credit_risk_scorecard.fpr_men_without_gender"
+file = "reports/gender_check.json"
+path = "without_gender.gender.1.fpr"
+row = "Gender group decisions (approval, recall, false-positive rate)"
+decimals = 1
+percent = true
+
+[[project.number]]
+id = "credit_risk_scorecard.pd_women_without_gender"
+file = "reports/gender_check.json"
+path = "without_gender.gender.0.mean_pd"
+row = "Calibrated PD by gender"
+decimals = 1
+percent = true
+
+[[project.number]]
+id = "credit_risk_scorecard.pd_men_without_gender"
+file = "reports/gender_check.json"
+path = "without_gender.gender.1.mean_pd"
+row = "Calibrated PD by gender"
+decimals = 1
+percent = true
+
 [[project]]
 repo = "bank-filings-rag"
 kind = "work"
