@@ -1,0 +1,36 @@
+# Settings for lychee in this repo's CI. It is tools/lychee.toml (copied unchanged from
+# ds-project-standard, so not edited here) plus one more skipped pattern.
+#
+# The extra pattern skips this site's own absolute addresses, such as the canonical link
+# and the share tags in every page. Before the site is deployed, those pages do not exist
+# yet, so a check would fail for the wrong reason. Links between the built pages are
+# relative, so lychee still checks them as files. The live site is checked once, after
+# the deploy, by the merge task.
+#
+# Run: lychee --config lychee.site.toml './_site/**/*.html' README.md CLAIMS.md './docs/**/*.md'
+
+cache = true
+max_cache_age = "1d"
+
+max_retries = 3
+retry_wait_time = 2
+timeout = 20
+max_concurrency = 8
+no_progress = true
+
+# 429 means "too many requests". The link exists; the site is only rate limiting us.
+accept = "200..=299, 429"
+
+exclude_all_private = true
+
+exclude = [
+    '^https?://(www\.)?linkedin\.com/',
+    '^https?://(www\.)?example\.(com|org|net)',
+    '^https://iliya-valizadeh\.github\.io/',
+]
+
+exclude_path = [
+    '\.venv',
+    'node_modules',
+    '\.git/',
+]
