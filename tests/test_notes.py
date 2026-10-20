@@ -79,7 +79,8 @@ def test_real_note_starts_with_the_draft_marker(note: Path) -> None:
 
 def test_draft_notes_are_left_out_of_the_built_site(built: tuple[Path, Path]) -> None:
     site_dir = built[0]
-    assert not (site_dir / "notes").exists()
+    # The Notes index is the only file in notes/ (it says no notes are published yet).
+    assert [p.name for p in (site_dir / "notes").iterdir()] == ["index.html"]
     leaks = [MARKER] + [n.stem for n in REAL_NOTES] + [_title(n) for n in REAL_NOTES]
     for path in site_dir.rglob("*"):
         if path.is_file():

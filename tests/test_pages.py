@@ -90,6 +90,7 @@ def test_markdown_record_holds_every_page(built: tuple[Path, Path]) -> None:
         "drafts/notes/the-fix-that-broke-my-probabilities.md",
         "for-everyone/second-look.md",
         "index.md",
+        "notes/index.md",
         "projects/bank-filings-rag.md",
         "projects/credit-risk-scorecard.md",
     ]
