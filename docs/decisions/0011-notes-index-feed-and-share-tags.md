@@ -1,4 +1,4 @@
-# 0011: Notes index, RSS feed and share tags
+# 0011: Notes index, RSS feed and share tags <!-- not-a-claim -->
 
 Date: 2026-10-20. Status: accepted.
 
@@ -29,7 +29,7 @@ Option 2 in both cases.
   sentence) and from the list of published notes, newest first. Each entry has the
   title, the date and the description from the note's front matter. With no published
   notes, the page shows the one sentence and no list.
-- `feed.xml` is RSS 2.0, with one item per published note. Each item has the title, the
+- `feed.xml` is RSS 2.0, with one item per published note. Each item has the title, the <!-- not-a-claim -->
   address, the same address as its `guid`, the date from the `Published:` line at
   midnight GMT, and the description. The feed has no build date, so the same input
   always gives the same file. With no published notes, it is a valid feed with no
