@@ -232,3 +232,6 @@ footer{margin-top:88px;padding-top:24px;border-top:1px solid var(--line);display
 .rv{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1)}
 .rv.in{opacity:1;transform:none}
 ::selection{background:var(--ink);color:var(--paper)}
+.notelist{list-style:none;padding-left:0}
+.notelist li+li{margin-top:18px}
+.notedate{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted)}

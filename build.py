@@ -29,6 +29,11 @@ docs/decisions/0007-home-and-about-pages.md and docs/decisions/0008-project-page
   `_site/`: its Markdown goes to `_build/md/drafts/` for the checks, and its page to
   `_build/preview/` for reading. After the build, the marker anywhere in `_site/`
   fails it. A `<!-- chart: name -->` line in a note draws a chart from built numbers.
+- Published notes get a Notes index (`notes/index.html`), an RSS feed (`feed.xml`) and
+  `notes.json` for the profile. All three list published notes only. With none, the
+  index says no notes are published yet, the feed has no items and `notes.json` is an
+  empty list (ADR 0005 and ADR 0011).
+- Every page carries Open Graph and Twitter card tags, with an absolute `og:url`.
 - Output goes to `_site/` (what is deployed) and `_build/md/` (each page's prose as
   filled-in Markdown, for the writing and number checks). Both are gitignored.
 - `static/` is copied unchanged, and `googleb968c9a0c91c49c6.html` is copied byte for
@@ -47,10 +52,12 @@ import shutil
 import sys
 import tomllib
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
+from email.utils import format_datetime
 from pathlib import Path
 from typing import Any
+from xml.sax.saxutils import escape as xml_escape
 
 from markdown_it import MarkdownIt
 
@@ -82,6 +89,10 @@ STATIC_DIR = ROOT / "static"
 CONFIG_PATH = ROOT / "projects.toml"
 NOTES_DIR = ROOT / "notes"
 VERIFICATION_FILE = "googleb968c9a0c91c49c6.html"
+# Where the site is served (a user site), for the absolute links that Open Graph, the
+# feed and notes.json need.
+SITE_URL = "https://iliya-valizadeh.github.io"
+SITE_NAME = "Iliya Valizadeh"
 
 # ADR 0005: a note whose first line of text starts with this is a draft.
 DRAFT_MARKER = "DRAFT: Iliya to edit"
@@ -589,8 +600,19 @@ def project_context(project: SiteProject) -> dict[str, str]:
     }
 
 
+def page_url(output: str) -> str:
+    """The absolute address of a built page. `index.html` is served at its folder."""
+    if output == "index.html":
+        return f"{SITE_URL}/"
+    return f"{SITE_URL}/{output.removesuffix('index.html')}"
+
+
 def build_page(
-    page: Page, numbers: Numbers, site: list[SiteProject], flags: dict[str, Flag]
+    page: Page,
+    numbers: Numbers,
+    site: list[SiteProject],
+    flags: dict[str, Flag],
+    notes: list[Note] | None = None,
 ) -> tuple[str, str]:
     """One page as HTML, and its prose as filled-in Markdown."""
     front, slots = read_content(page.content)
@@ -608,10 +630,20 @@ def build_page(
         script=f"{page.root}static/{page.script}",
         page_title=html.escape(front["title"]),
         page_description=html.escape(front["description"], quote=True),
+        page_url=page_url(page.output),
+        og_type="website",
     )
     if page.project is not None:
         context.update(project_context(page.project))
     md_parts = [f"Page title: {front['title']}.", front["description"], *filled.values()]
+    if "notes" in page.partials:
+        context["page_label"] = "01 / NOTES"
+        list_html, list_md = notes_list(notes or [])
+        if list_html:
+            context["note_list"] = list_html
+            md_parts.append(list_md)
+        else:
+            context["note_list"] = context["empty"]
     if "work" in page.partials:
         cards_html, cards_md = project_cards(site, numbers, flags)
         context["project_cards"] = cards_html
@@ -637,6 +669,8 @@ class Note:
     published: str  # "" while the note is a draft (ADR 0005)
     html: str
     md: str
+    title: str = ""
+    description: str = ""
 
     @property
     def draft(self) -> bool:
@@ -869,6 +903,8 @@ def build_note(path: Path, numbers: Numbers, flags: dict[str, Flag]) -> Note:
         "script": "../static/site.js",
         "page_title": f"{title} | Iliya Valizadeh",
         "page_description": html.escape(front["description"], quote=True),
+        "page_url": page_url(f"notes/{path.stem}.html"),
+        "og_type": "article",
         "page_label": "01 / NOTE",
         "note_title": title,
         "note_status": f"Published {published}" if published else "Draft, not published",
@@ -881,7 +917,14 @@ def build_note(path: Path, numbers: Numbers, flags: dict[str, Flag]) -> Note:
     if "{{" in rendered:
         raise BuildError(f"a placeholder was left unfilled in {where}")
     md = "\n\n".join([f"Page title: {front['title']}.", front["description"], body_md]) + "\n"
-    return Note(slug=path.stem, published=published, html=rendered, md=md)
+    return Note(
+        slug=path.stem,
+        published=published,
+        html=rendered,
+        md=md,
+        title=front["title"],
+        description=front["description"],
+    )
 
 
 def write_notes(notes: list[Note]) -> None:
@@ -906,6 +949,84 @@ def write_notes(notes: list[Note]) -> None:
             path.write_text(text, encoding="utf-8", newline="\n")
     if any(n.draft for n in notes):
         copy_static(preview_dir)
+
+
+def published_notes(notes: list[Note]) -> list[Note]:
+    """The notes that are not drafts, newest first (ADR 0005)."""
+    items = [n for n in notes if not n.draft]
+    return sorted(items, key=lambda n: (n.published, n.slug), reverse=True)
+
+
+def notes_list(notes: list[Note]) -> tuple[str, str]:
+    """The Notes index list as HTML and as Markdown. Both are empty with no notes."""
+    items = published_notes(notes)
+    if not items:
+        return "", ""
+    rows = []
+    for n in items:
+        rows.append(
+            f'<li><a href="{html.escape(n.slug, quote=True)}.html">{html.escape(n.title)}</a>'
+            f' <span class="notedate">{n.published}</span>'
+            f"<br>{html.escape(n.description)}</li>"
+        )
+    md = "\n".join(f"- {n.title}, {n.published}. {n.description}" for n in items)
+    return '<ul class="notelist">\n' + "\n".join(rows) + "\n</ul>", md
+
+
+NOTES_PAGE = Page(
+    output="notes/index.html",
+    content="notes.md",
+    partials=("nav", "notes", "contact"),
+    script="site.js",
+    home="../index.html",
+    contact_label="02 / CONTACT",
+    root="../",
+)
+
+
+def feed_xml(notes: list[Note]) -> str:
+    """An RSS 2.0 feed of the published notes. With none, it is valid and has no items."""
+    items = []
+    for n in published_notes(notes):
+        url = page_url(f"notes/{n.slug}.html")
+        when = datetime.combine(date.fromisoformat(n.published), datetime.min.time(), tzinfo=UTC)
+        items.append(
+            "    <item>\n"
+            f"      <title>{xml_escape(n.title)}</title>\n"
+            f"      <link>{url}</link>\n"
+            f'      <guid isPermaLink="true">{url}</guid>\n'
+            f"      <pubDate>{format_datetime(when, usegmt=True)}</pubDate>\n"
+            f"      <description>{xml_escape(n.description)}</description>\n"
+            "    </item>\n"
+        )
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n'
+        "  <channel>\n"
+        f"    <title>{xml_escape(SITE_NAME)}: notes</title>\n"
+        f"    <link>{page_url('notes/index.html')}</link>\n"
+        "    <description>Short notes on what I found while building my data science "
+        "projects.</description>\n"
+        "    <language>en</language>\n"
+        f'    <atom:link href="{SITE_URL}/feed.xml" rel="self" type="application/rss+xml"/>\n'
+        + "".join(items)
+        + "  </channel>\n</rss>\n"
+    )
+
+
+def notes_json(notes: list[Note]) -> str:
+    """The published notes as a JSON list, for the profile README (ADR 0005)."""
+    rows = [
+        {
+            "slug": n.slug,
+            "title": n.title,
+            "description": n.description,
+            "published": n.published,
+            "url": page_url(f"notes/{n.slug}.html"),
+        }
+        for n in published_notes(notes)
+    ]
+    return json.dumps(rows, indent=2, ensure_ascii=False) + "\n"
 
 
 def check_no_draft_marker(site_dir: Path) -> None:
@@ -937,9 +1058,9 @@ def build(offline: bool) -> None:
     numbers = fetch_numbers(config, site, fetcher)
     flags = {f.id: f for p in site for f in p.flags}
 
-    all_pages = [*PAGES, *project_pages(site)]
-    pages = [(page, *build_page(page, numbers, site, flags)) for page in all_pages]
     notes = [build_note(path, numbers, flags) for path in sorted(NOTES_DIR.glob("*.md"))]
+    all_pages = [*PAGES, *project_pages(site), NOTES_PAGE]
+    pages = [(page, *build_page(page, numbers, site, flags, notes)) for page in all_pages]
 
     if SITE_DIR.exists():
         shutil.rmtree(SITE_DIR)
@@ -958,6 +1079,8 @@ def build(offline: bool) -> None:
     sources_text = json.dumps(numbers.sources, indent=2, sort_keys=True) + "\n"
     (SITE_DIR / "sources.json").write_text(sources_text, encoding="utf-8", newline="\n")
     write_notes(notes)
+    for name, text in (("feed.xml", feed_xml(notes)), ("notes.json", notes_json(notes))):
+        (SITE_DIR / name).write_text(text, encoding="utf-8", newline="\n")
     check_no_draft_marker(SITE_DIR)
 
 
