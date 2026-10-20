@@ -86,6 +86,8 @@ def test_markdown_record_holds_every_page(built: tuple[Path, Path]) -> None:
     assert names == [
         "about.md",
         "drafts/notes/a-quarter-of-each-page.md",
+        "drafts/notes/removing-gender-from-a-credit-model.md",
+        "drafts/notes/the-fix-that-broke-my-probabilities.md",
         "for-everyone/second-look.md",
         "index.md",
         "projects/bank-filings-rag.md",
