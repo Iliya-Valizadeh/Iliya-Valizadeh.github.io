@@ -193,6 +193,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .chart svg{display:block;width:100%;max-width:560px;height:auto}
 .chart-read{fill:var(--gold)}
 .chart-rest{fill:var(--paper2);stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.chart-line{stroke:var(--ink2);stroke-width:2}
 .chart-label{font-family:var(--mono);font-size:12px;fill:var(--ink)}
 .chart-tick,.chart-axis{font-family:var(--mono);font-size:11px;fill:var(--ink2)}
 .chart figcaption{margin-top:10px;font-size:14.5px;color:var(--ink2)}

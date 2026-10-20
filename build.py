@@ -716,7 +716,115 @@ def word_pieces_chart(numbers: Numbers) -> tuple[str, str]:
     return svg, md
 
 
-CHARTS = {"word_pieces": word_pieces_chart}
+def _chart_numbers(numbers: Numbers, ids: list[str], chart: str) -> list[tuple[str, Decimal]]:
+    """The shown text and the value of each number a chart needs, or a build error."""
+    texts = [numbers.values.get(f"credit_risk_scorecard.{i}", "") for i in ids]
+    if not all(texts):
+        raise BuildError(f"the {chart} chart needs these numbers: {', '.join(ids)}")
+    values = [Decimal(t.rstrip("%").replace(",", "")) for t in texts]
+    if not all(v > 0 for v in values):
+        raise BuildError(f"the {chart} chart needs numbers above zero")
+    return list(zip(texts, values, strict=True))
+
+
+def mean_pd_chart(numbers: Numbers) -> tuple[str, str]:
+    """Three bars: the raw and calibrated average PD, and the real default rate.
+
+    All three are credit-risk-scorecard CLAIMS.md entries (ADR 0002). The bars are
+    scaled to the largest one. The chart shows no number of its own.
+    """
+    shown = _chart_numbers(
+        numbers, ["raw_mean_pd", "isotonic_mean_pd", "observed_default_rate"], "mean PD"
+    )
+    labels = ["Raw model", "After calibration", "Real default rate"]
+    top = max(v for _, v in shown)
+    left, bar_x, width = 20, 170, 180
+    rows = []
+    for i, (label, (text, value)) in enumerate(zip(labels, shown, strict=True)):
+        y = 14 + i * 34
+        w = round(float(width * value / top), 1)
+        rows.append(
+            f'  <text class="chart-label" x="{left}" y="{y + 15}">{label}</text>\n'
+            f'  <rect class="chart-read" x="{bar_x}" y="{y}" width="{w}" height="22" rx="3">'
+            f"<title>{label}: {text}</title></rect>\n"
+            f'  <text class="chart-tick" x="{round(bar_x + w + 6, 1)}" y="{y + 15}">{text}</text>'
+        )
+    parts = [f"{label}: {text}" for label, (text, _) in zip(labels, shown, strict=True)]
+    label = "Average chance of default on the test part. " + ". ".join(parts) + "."
+    svg = (
+        f'<svg viewBox="0 0 400 134" role="img" aria-label="{html.escape(label, quote=True)}">\n'
+        + "\n".join(rows)
+        + f'\n  <text class="chart-axis" x="{bar_x + width / 2}" y="126" text-anchor="middle">'
+        "average chance of default</text>\n</svg>"
+    )
+    md = (
+        "Chart: three bars for the average chance of default on the test part. "
+        + "; ".join(parts)
+        + "."
+    )
+    return svg, md
+
+
+def gender_approval_chart(numbers: Numbers) -> tuple[str, str]:
+    """Approval rates for women and men, with and without gender as an input.
+
+    One row per model, a dot per group and a line for the gap between them. The four
+    rates are credit-risk-scorecard CLAIMS.md entries (ADR 0002). The x scale only
+    spans those rates. The chart shows no number of its own.
+    """
+    shown = _chart_numbers(
+        numbers,
+        [
+            "approval_women_with_gender_pct",
+            "approval_men_with_gender_pct",
+            "approval_women_without_gender_pct",
+            "approval_men_without_gender_pct",
+        ],
+        "approval",
+    )
+    lo, hi = min(v for _, v in shown), max(v for _, v in shown)
+    if lo == hi:
+        raise BuildError("the approval chart needs rates that differ")
+    pad = (hi - lo) / 4
+    x0, span = 150, 230
+
+    def x(value: Decimal) -> float:
+        return round(float(x0 + span * (value - lo + pad) / (hi - lo + 2 * pad)), 1)
+
+    rows, parts = [], []
+    for i, model in enumerate(["With gender", "Without gender"]):
+        (w_text, w_val), (m_text, m_val) = shown[2 * i], shown[2 * i + 1]
+        cy = 46 + i * 50
+        xw, xm = x(w_val), x(m_val)
+        rows.append(
+            f'  <text class="chart-label" x="20" y="{cy + 4}">{model}</text>\n'
+            f'  <line class="chart-line" x1="{xm}" y1="{cy}" x2="{xw}" y2="{cy}"/>\n'
+            f'  <circle class="chart-read" cx="{xm}" cy="{cy}" r="6">'
+            f"<title>{model}, men approved: {m_text}</title></circle>\n"
+            f'  <circle class="chart-read" cx="{xw}" cy="{cy}" r="6">'
+            f"<title>{model}, women approved: {w_text}</title></circle>\n"
+            f'  <text class="chart-tick" x="{xm}" y="{cy - 12}" text-anchor="middle">'
+            f"Men {m_text}</text>\n"
+            f'  <text class="chart-tick" x="{xw}" y="{cy - 12}" text-anchor="middle">'
+            f"Women {w_text}</text>"
+        )
+        parts.append(f"{model.lower()}, women {w_text} and men {m_text}")
+    label = "Share of applicants approved: " + "; ".join(parts) + "."
+    svg = (
+        f'<svg viewBox="0 0 400 134" role="img" aria-label="{html.escape(label, quote=True)}">\n'
+        + "\n".join(rows)
+        + f'\n  <text class="chart-axis" x="{x0 + span / 2}" y="126" text-anchor="middle">'
+        "share of applicants approved</text>\n</svg>"
+    )
+    md = "Chart: a dot for women and a dot for men, joined by a line, per model. " + label
+    return svg, md
+
+
+CHARTS = {
+    "word_pieces": word_pieces_chart,
+    "mean_pd": mean_pd_chart,
+    "gender_approval": gender_approval_chart,
+}
 
 
 def note_body(body: str, numbers: Numbers, where: str) -> tuple[str, str]:
