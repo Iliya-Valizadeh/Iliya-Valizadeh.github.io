@@ -7,6 +7,7 @@ feed) later tasks add there.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ from scripts.shared.render_readme import OfflineFetcher, load_config
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = ROOT / "tests" / "fixtures"
 REAL_NOTE = ROOT / "notes" / "a-quarter-of-each-page.md"
+REAL_NOTES = sorted((ROOT / "notes").glob("*.md"))
 MARKER = "DRAFT: Iliya to edit"
 
 NOTE_BODY = """---
@@ -54,21 +56,36 @@ def _numbers() -> build_module.Numbers:
 # ------------------------------------------------------------------ the real draft note
 
 
-def test_real_note_starts_with_the_draft_marker() -> None:
-    first = REAL_NOTE.read_text(encoding="utf-8").lstrip("﻿").splitlines()[0]
+def _title(note: Path) -> str:
+    for line in note.read_text(encoding="utf-8").splitlines():
+        if line.startswith("title: "):
+            return line.removeprefix("title: ")
+    raise AssertionError(f"{note} has no title")
+
+
+def test_all_three_real_notes_are_there() -> None:
+    assert [p.stem for p in REAL_NOTES] == [
+        "a-quarter-of-each-page",
+        "removing-gender-from-a-credit-model",
+        "the-fix-that-broke-my-probabilities",
+    ]
+
+
+@pytest.mark.parametrize("note", REAL_NOTES, ids=lambda p: p.stem)
+def test_real_note_starts_with_the_draft_marker(note: Path) -> None:
+    first = note.read_text(encoding="utf-8").lstrip("﻿").splitlines()[0]
     assert first == MARKER
 
 
-def test_draft_note_is_left_out_of_the_built_site(built: tuple[Path, Path]) -> None:
+def test_draft_notes_are_left_out_of_the_built_site(built: tuple[Path, Path]) -> None:
     site_dir = built[0]
     assert not (site_dir / "notes").exists()
-    title = "My search model only read a quarter of each page"
+    leaks = [MARKER] + [n.stem for n in REAL_NOTES] + [_title(n) for n in REAL_NOTES]
     for path in site_dir.rglob("*"):
         if path.is_file():
             text = path.read_bytes().decode("utf-8", errors="replace")
-            assert MARKER not in text, path
-            assert REAL_NOTE.stem not in text, path
-            assert title not in text, path
+            for leak in leaks:
+                assert leak not in text, (path, leak)
 
 
 def test_draft_note_is_still_checked(built: tuple[Path, Path]) -> None:
@@ -81,9 +98,27 @@ def test_draft_note_is_still_checked(built: tuple[Path, Path]) -> None:
     assert "Chart: one bar for a median page of 981 word pieces." in md
 
 
-def test_draft_note_has_a_preview_page_with_its_chart(built: tuple[Path, Path]) -> None:
+def test_credit_notes_are_checked_with_their_numbers(built: tuple[Path, Path]) -> None:
+    drafts = built[1] / "drafts" / "notes"
+    pd_note = (drafts / "the-fix-that-broke-my-probabilities.md").read_text(encoding="utf-8")
+    for value in ("39.5%", "8.07%", "8.0%", "0.1851", "0.0673", "0.769", "0.768", "45%"):
+        assert value in pd_note
+    for value in ("4,312,985,709", "642,168,648", "633,364,511"):
+        assert value in pd_note
+    gender = (drafts / "removing-gender-from-a-credit-model.md").read_text(encoding="utf-8")
+    for value in ("84.5%", "72.3%", "83.2%", "75.2%", "13.1%", "14.4%", "23.9%", "20.9%"):
+        assert value in gender
+    for value in ("0.7703", "0.7687", "0.876", "10.2%", "7.0%", "7.4%", "9.2%", "20%"):
+        assert value in gender
+    for md in (pd_note, gender):
+        assert "{{" not in md
+        assert MARKER not in md
+
+
+@pytest.mark.parametrize("note", REAL_NOTES, ids=lambda p: p.stem)
+def test_draft_note_has_a_preview_page_with_its_chart(built: tuple[Path, Path], note: Path) -> None:
     preview = built[1].parent / "preview"
-    html = (preview / "notes" / f"{REAL_NOTE.stem}.html").read_text(encoding="utf-8")
+    html = (preview / "notes" / f"{note.stem}.html").read_text(encoding="utf-8")
     assert "{{" not in html
     assert "Draft, not published" in html
     assert html.count('<figure class="chart">') == 1
@@ -187,3 +222,56 @@ def test_chart_needs_its_numbers() -> None:
     )
     with pytest.raises(build_module.BuildError, match="below the median"):
         build_module.word_pieces_chart(wrong)
+
+
+def test_mean_pd_chart_scales_the_bars_to_the_raw_pd() -> None:
+    svg, md = build_module.mean_pd_chart(_numbers())
+    # 180 * 8.0 / 39.5 and 180 * 8.07 / 39.5, rounded to one decimal.
+    assert 'width="180.0"' in svg
+    assert 'width="36.5"' in svg
+    assert 'width="36.8"' in svg
+    assert md.endswith("Raw model: 39.5%; After calibration: 8.0%; Real default rate: 8.07%.")
+
+
+def _line_lengths(svg: str) -> list[float]:
+    lines = re.findall(r'<line class="chart-line" x1="([\d.]+)" y1="[\d.]+" x2="([\d.]+)"', svg)
+    return [float(b) - float(a) for a, b in lines]
+
+
+def test_gender_chart_shows_the_gap_shrink_but_not_close() -> None:
+    svg, md = build_module.gender_approval_chart(_numbers())
+    with_gender, without_gender = _line_lengths(svg)
+    assert 0 < without_gender < with_gender
+    for text in ("Women 84.5%", "Men 72.3%", "Women 83.2%", "Men 75.2%"):
+        assert f">{text}</text>" in svg
+    assert "with gender, women 84.5% and men 72.3%" in md
+
+
+def _credit_numbers(**values: str) -> build_module.Numbers:
+    return build_module.Numbers(
+        values={f"credit_risk_scorecard.{k}": v for k, v in values.items()},
+        synthetic=set(),
+        flags={},
+        sources={},
+    )
+
+
+def test_credit_charts_need_their_numbers() -> None:
+    empty = _credit_numbers()
+    with pytest.raises(build_module.BuildError, match="mean PD chart needs"):
+        build_module.mean_pd_chart(empty)
+    with pytest.raises(build_module.BuildError, match="approval chart needs these"):
+        build_module.gender_approval_chart(empty)
+    zero = _credit_numbers(
+        raw_mean_pd="0.0%", isotonic_mean_pd="8.0%", observed_default_rate="8.07%"
+    )
+    with pytest.raises(build_module.BuildError, match="above zero"):
+        build_module.mean_pd_chart(zero)
+    same = _credit_numbers(
+        approval_women_with_gender_pct="80.0%",
+        approval_men_with_gender_pct="80.0%",
+        approval_women_without_gender_pct="80.0%",
+        approval_men_without_gender_pct="80.0%",
+    )
+    with pytest.raises(build_module.BuildError, match="rates that differ"):
+        build_module.gender_approval_chart(same)
