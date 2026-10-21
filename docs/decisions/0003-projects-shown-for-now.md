@@ -5,8 +5,8 @@ Date: 2026-09-26. Status: accepted.
 ## Context
 
 Plan section `5.7` asks for a Home page with three work projects and the public tool,
-and a case-study page per project. The plan's third work project,
-`fraud-review-queue`, is Phase C. Phase C has not started, because it needs a Kaggle
+and a case-study page per project. The plan's third work project
+is Phase C. Phase C has not started, because it needs a Kaggle
 key that only Iliya can set up. The profile repo has the same gap: the plan's "six
 pinned projects" become five rows there for now. The site must not suggest that a
 project exists before it does.
@@ -37,9 +37,8 @@ projects. Across both repos, five projects are shown.
 
 The Home list, the project navigation and the case-study index are loops over these
 entries. The templates have no project names, no fixed counts and no empty slot. There
-is no card, page, link, number or "coming soon" text for `fraud-review-queue` anywhere
-in the config, content, templates or output. Its name appears only in decision
-records.
+is no card, page, link, number or "coming soon" text for the third work project anywhere
+in the config, content, templates or output. Its name appears nowhere on the site.
 
 When Phase C is done, adding it to every list takes one new `[[project]]` entry. Its
 case-study page is one new Markdown file in `content/projects/`, which Phase C writes
@@ -53,5 +52,5 @@ that it appears in each list with no template change.
 
 - Nothing on the site describes work that has not been done.
 - Adding a project touches the config and adds its own page, nothing else.
-- The review task at the end of this phase greps the config, content, templates and
-  `_site/` for `fraud-review-queue` and expects no match.
+- The review task at the end of this phase checks the config, content, templates and
+  `_site/` for any trace of the third work project and expects none.
