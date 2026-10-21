@@ -33,9 +33,31 @@ Drop `--offline` to read the live results files from GitHub instead. That is wha
 - the draft test, which proves a note marked as a draft is missing from the built site, the Notes index and the feed
 - lychee, which checks every link in the built site
 
-`.github/workflows/pages.yml` builds from the live results files and deploys, but only on `main` and only once the repo's Pages source is set to GitHub Actions.
+`.github/workflows/pages.yml` builds from the live results files and deploys, but only on `main` (a push or the "Run workflow" button, with no schedule, see [ADR 0014](docs/decisions/0014-no-scheduled-run-for-pages.md)) and only once the repo's Pages source is set to GitHub Actions. <!-- not-a-claim -->
 
 To run the same checks yourself, follow the commands in `ci.yml`. The reasons for each one are in [ADR 0004](docs/decisions/0004-checks.md).
+
+## Accessibility and speed
+
+The site follows your system's light or dark setting, shows its page links on phones, has a skip link and visible keyboard focus, and turns off motion if you ask your system for less of it. The reasons are in [ADR 0013](docs/decisions/0013-accessibility-dark-mode-and-lighthouse.md). <!-- not-a-claim -->
+
+Lighthouse scores each page from 0 to 100. The table shows the lowest score across all 6 built pages. The goal was 90 or more in every cell, and every cell meets it.
+
+| Category | Mobile | Desktop |
+|---|---|---|
+| Performance | 90 | 91 |
+| Accessibility | 100 | 100 |
+| Best practices | 100 | 100 |
+| SEO | 100 | 100 |
+| Accessibility, dark mode (desktop preset) | not run | 100 |
+
+The scores are in `reports/lighthouse.json`. To make them again, build the site, then run `uv run python scripts/lighthouse_run.py`. You need Node.js and Chrome. CI does not run it.
+
+What is weak:
+
+- Each score comes from one run on one machine, on the offline build served from my computer. The server compresses text the way GitHub Pages does, but I have not run Lighthouse on the live site.
+- Mobile performance is simulated and moves by a point or two between runs. Its lowest value sits right at the 90 line, so another run can read just under it. I saw that happen before I added compression to the local server.
+- Lighthouse runs automatic checks only. I have not tested the site with a screen reader.
 
 ## Where things live
 
