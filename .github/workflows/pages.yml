@@ -1,8 +1,10 @@
 name: Build and deploy the site to Pages
 
 # Per docs/decisions/0001-a-small-python-build-deployed-by-actions.md:
-# - Runs on pushes to `main`, on a daily schedule (numbers stay in sync with the
-#   source repos even with no push) and on workflow_dispatch. Never on other
+# - Runs on pushes to `main` and on workflow_dispatch (the "Run workflow" button, to
+#   refresh the numbers after a source repo changes). It has no schedule: a daily run
+#   read the live source repos, so an outage or a changed number there would have
+#   failed it every day and emailed Iliya every day (ADR 0014). Never on other
 #   branches: this workflow has no `branches:` filter on `push` other than `main`.
 # - The `check` job asks the Pages API whether this repo's Pages source is set to
 #   "GitHub Actions". If not, `build` and `deploy` are skipped, not failed, so an
@@ -14,13 +16,11 @@ name: Build and deploy the site to Pages
 #   so a bad number, a broken link or a stray Hack the North mention stops the
 #   deploy: nothing is uploaded, and the last good site stays up.
 # - `deploy` also checks the ref is refs/heads/main, on top of the `check` job and
-#   the `on: push: branches: [main]` filter, so a scheduled or dispatched run on any
+#   the `on: push: branches: [main]` filter, so a dispatched run on any
 #   other ref never publishes.
 on:
   push:
     branches: [main]
-  schedule:
-    - cron: "17 6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -71,7 +71,7 @@ jobs:
           uv run ruff format --check .
 
       - name: Types (mypy)
-        run: uv run mypy build.py scripts/check_numbers.py scripts/__init__.py tests/
+        run: uv run mypy build.py scripts/check_numbers.py scripts/lighthouse_run.py scripts/__init__.py tests/
 
       - name: Tests (pytest, coverage of build.py and scripts/, offline)
         run: uv run pytest
