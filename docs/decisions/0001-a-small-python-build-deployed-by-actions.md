@@ -1,6 +1,6 @@
 # 0001: A small Python build, deployed by GitHub Actions from main
 
-Date: 2026-09-26. Status: accepted.
+Date: 2026-09-26. Status: accepted. The daily run was dropped in [ADR 0014](0014-no-scheduled-run-for-pages.md). <!-- not-a-claim -->
 
 ## Context
 
