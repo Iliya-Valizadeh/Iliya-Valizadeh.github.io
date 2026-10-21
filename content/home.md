@@ -16,8 +16,9 @@ results file when the site is built. It shows a number only if that project's
 [sources.json](sources.json).
 
 <!-- slot: how_i_work -->
-Each project is built on the same template,
-[ds-project-standard](https://github.com/Iliya-Valizadeh/ds-project-standard). It gives
-every repo the same docs, tests and checks. A build stops when a number has no source,
+Each project now uses the same template,
+[ds-project-standard](https://github.com/Iliya-Valizadeh/ds-project-standard). The two
+older projects moved onto it after they were built. The template gives every repo the
+same docs, tests and checks. A build stops when a number has no source,
 a page is hard to read, or a link is broken. The shared issue forms and the pull
 request checklist are in [.github](https://github.com/Iliya-Valizadeh/.github).
