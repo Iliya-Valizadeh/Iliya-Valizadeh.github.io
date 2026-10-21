@@ -80,7 +80,7 @@ jobs:
         run: uv run python build.py
 
       - name: Vendored-tools guard (byte for byte, per ADR 0004)
-        run: uv run pytest tests/test_vendored_tools.py tests/test_shared_numbers.py
+        run: uv run pytest tests/test_vendored_tools.py tests/test_shared_numbers.py --no-cov
 
       - name: AI-writing signs (zero flags)
         run: uv run python tools/ai_signs_check.py README.md docs _build/md CLAIMS.md
@@ -109,7 +109,7 @@ jobs:
           PYTHONPATH: tools
 
       - name: Hack the North and "fraud" guards, unfilled-placeholder guard
-        run: uv run pytest tests/test_guards.py
+        run: uv run pytest tests/test_guards.py --no-cov
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
