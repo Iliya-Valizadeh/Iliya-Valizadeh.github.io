@@ -20,3 +20,12 @@ years, dates and version numbers are skipped. To skip one line by hand, add the 
 
 | Claim | Value | Source | Command |
 |---|---|---|---|
+| Lowest performance score, mobile preset, over all built pages | 90 | `reports/lighthouse.json#summary.lowest.mobile.performance` | `uv run python scripts/lighthouse_run.py` |
+| Lowest accessibility score, mobile preset, over all built pages | 100 | `reports/lighthouse.json#summary.lowest.mobile.accessibility` | `uv run python scripts/lighthouse_run.py` |
+| Lowest best practices score, mobile preset, over all built pages | 100 | `reports/lighthouse.json#summary.lowest.mobile.best-practices` | `uv run python scripts/lighthouse_run.py` |
+| Lowest seo score, mobile preset, over all built pages | 100 | `reports/lighthouse.json#summary.lowest.mobile.seo` | `uv run python scripts/lighthouse_run.py` |
+| Lowest performance score, desktop preset, over all built pages | 91 | `reports/lighthouse.json#summary.lowest.desktop.performance` | `uv run python scripts/lighthouse_run.py` |
+| Lowest accessibility score, desktop preset, over all built pages | 100 | `reports/lighthouse.json#summary.lowest.desktop.accessibility` | `uv run python scripts/lighthouse_run.py` |
+| Lowest best practices score, desktop preset, over all built pages | 100 | `reports/lighthouse.json#summary.lowest.desktop.best-practices` | `uv run python scripts/lighthouse_run.py` |
+| Lowest seo score, desktop preset, over all built pages | 100 | `reports/lighthouse.json#summary.lowest.desktop.seo` | `uv run python scripts/lighthouse_run.py` |
+| Lowest accessibility score in dark mode, over all built pages | 100 | `reports/lighthouse.json#summary.lowest.dark.accessibility` | `uv run python scripts/lighthouse_run.py` |

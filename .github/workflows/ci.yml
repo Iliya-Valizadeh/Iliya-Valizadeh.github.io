@@ -33,7 +33,7 @@ jobs:
           uv run ruff format --check .
 
       - name: Types (mypy)
-        run: uv run mypy build.py scripts/check_numbers.py scripts/__init__.py tests/
+        run: uv run mypy build.py scripts/check_numbers.py scripts/lighthouse_run.py scripts/__init__.py tests/
 
       - name: Tests (pytest, coverage floor from pyproject.toml, offline)
         run: uv run pytest
