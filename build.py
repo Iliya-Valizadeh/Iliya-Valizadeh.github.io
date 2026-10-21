@@ -649,7 +649,14 @@ def build_page(
         context["project_cards"] = cards_html
         md_parts.append(cards_md)
 
-    body = "\n\n".join(render_template(load_partial(name), context) for name in page.partials)
+    parts_html = [render_template(load_partial(name), context) for name in page.partials]
+    # The nav stays outside <main>, so the skip link and screen readers can jump past it.
+    body = (
+        parts_html[0]
+        + '\n\n<main id="main" tabindex="-1">\n'
+        + "\n\n".join(parts_html[1:])
+        + "\n</main>"
+    )
     context["body"] = body
     shell = (TEMPLATES_DIR / "page.html").read_text(encoding="utf-8")
     rendered = render_template(shell, context)

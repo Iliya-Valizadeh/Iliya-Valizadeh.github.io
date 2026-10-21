@@ -58,7 +58,7 @@ def _md(built: tuple[Path, Path], repo: str) -> str:
 def test_each_page_links_back_from_its_folder(built: tuple[Path, Path], repo: str) -> None:
     html = _html(built, repo)
     assert 'href="../static/style.css"' in html
-    assert '<script src="../static/site.js">' in html
+    assert '<script src="../static/site.js" defer>' in html
     assert 'href="../about.html"' in html
     assert 'href="../index.html#work"' in html
     assert f'href="https://github.com/Iliya-Valizadeh/{repo}"' in html
