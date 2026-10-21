@@ -76,9 +76,9 @@ def test_home_has_no_decorative_sparklines(built: tuple[Path, Path]) -> None:
 
 
 def test_pages_load_the_right_script(built: tuple[Path, Path]) -> None:
-    assert '<script src="static/main.js">' in _home(built)
+    assert '<script src="static/main.js" defer>' in _home(built)
     about = (built[0] / "about.html").read_text(encoding="utf-8")
-    assert '<script src="static/site.js">' in about
+    assert '<script src="static/site.js" defer>' in about
 
 
 def test_markdown_record_holds_every_page(built: tuple[Path, Path]) -> None:
