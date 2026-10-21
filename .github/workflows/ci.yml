@@ -1,0 +1,91 @@
+name: CI
+
+# Per docs/decisions/0004-checks.md. Runs on every push and pull request, offline: the
+# build reads tests/fixtures/ instead of the source repos, so a change in another repo
+# can never turn this run red. pages.yml repeats the writing and number checks against
+# the live source files before it deploys, and only on main.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: tools
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: true
+
+      - name: Install pinned packages
+        run: uv sync --locked
+
+      - name: Lint and format (ruff)
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Types (mypy)
+        run: uv run mypy build.py scripts/check_numbers.py scripts/lighthouse_run.py scripts/__init__.py tests/
+
+      - name: Tests (pytest, coverage floor from pyproject.toml, offline)
+        run: uv run pytest
+
+      - name: Draft exclusion tests (a draft is in no built file, index or feed)
+        run: uv run pytest tests/test_notes.py tests/test_notes_index.py --no-cov
+
+      - name: Vendored-tools guard (byte for byte, per ADR 0004)
+        run: uv run pytest tests/test_vendored_tools.py tests/test_shared_numbers.py --no-cov
+
+      - name: Hack the North and "fraud" guards, unfilled-placeholder guard
+        run: uv run pytest tests/test_guards.py --no-cov
+
+      - name: Build the site from the saved fixtures
+        run: uv run python build.py --offline
+
+      - name: AI-writing signs (zero flags)
+        run: uv run python tools/ai_signs_check.py README.md docs _build/md CLAIMS.md
+
+      - name: Readability (notes and For everyone pages at the plain limit)
+        run: >
+          uv run python tools/readability_check.py README.md docs _build/md CLAIMS.md
+          --plain-glob "notes/*.md" --plain-glob "*/notes/*.md"
+          --plain-glob "*/for-everyone/*.md"
+
+      - name: Numbers check (every number in _build/md came from a placeholder)
+        run: uv run python scripts/check_numbers.py --offline _build/md
+
+      - name: Claims in docs
+        run: uv run python tools/claims_check.py README.md docs
+
+      - name: Local links
+        run: uv run python tools/links_check.py README.md docs CLAIMS.md
+
+  web-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: true
+
+      - name: Install pinned packages
+        run: uv sync --locked
+
+      - name: Build the site from the saved fixtures, so lychee has a real _site/
+        run: uv run python build.py --offline
+
+      - name: Web link check (lychee), over the built site and the docs
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --config lychee.site.toml './_site/**/*.html' README.md CLAIMS.md './docs/**/*.md'
+          fail: true
