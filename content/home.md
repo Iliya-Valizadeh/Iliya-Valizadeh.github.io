@@ -6,7 +6,7 @@ description: Iliya Valizadeh studies data science at York University in Toronto.
 Data science that shows its work.
 
 <!-- slot: seeking -->
-Seeking a Winter 2027 co-op in data science or analytics. I graduate in April 2028.
+Seeking a Winter 2027 co-op or Summer 2027 internship in data engineering, data science or analytics. I graduate in April 2028.
 
 <!-- slot: work_intro -->
 Each project ties every number to the script that made it, records its design choices,
