@@ -80,7 +80,7 @@ def test_home_charts_link_their_source_files(built: tuple[Path, Path]) -> None:
 def test_home_links_the_live_tool_and_the_resume(built: tuple[Path, Path]) -> None:
     html = _home(built)
     assert 'href="https://iliya-valizadeh.github.io/second-look/"' in html
-    assert '<a href="resume.pdf">Resume (PDF)</a>' in html
+    assert '<a href="static/resume.pdf">Resume (PDF)</a>' in html
 
 
 def test_home_says_co_op_and_dates(built: tuple[Path, Path]) -> None:
@@ -93,7 +93,7 @@ def test_home_says_co_op_and_dates(built: tuple[Path, Path]) -> None:
 
 
 def test_home_shows_the_failed_bar_from_metrics(built: tuple[Path, Path]) -> None:
-    assert "did not meet the bar I set" in _home(built)
+    assert "under the bar I set before the first test" in _home(built)
 
 
 def test_home_has_none_of_the_removed_decoration(built: tuple[Path, Path]) -> None:

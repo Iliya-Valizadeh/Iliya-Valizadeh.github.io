@@ -35,7 +35,7 @@
 repo = "nyc-rideshare-congestion"
 kind = "featured"
 metrics_file = "reports/load_summary.json"
-title = "nyc-rideshare-congestion"
+title = "NYC rideshare data pipeline"
 about = """
 A tested pipeline for New York City's Uber and Lyft trip records, built to study what
 the congestion toll on lower Manhattan changed.
@@ -72,7 +72,7 @@ thousands = true
 repo = "bank-filings-rag"
 kind = "featured"
 metrics_file = "reports/metrics.json"
-title = "bank-filings-rag"
+title = "Question answering over a bank annual report"
 about = """
 Answers questions about RBC's 2024 Annual Report and names the page each answer came
 from.
@@ -212,7 +212,7 @@ index = 0
 repo = "credit-risk-scorecard"
 kind = "featured"
 metrics_file = "reports/metrics.json"
-title = "credit-risk-scorecard"
+title = "Credit-risk scorecard"
 about = """
 Ranks loan applicants by the risk that they miss payments, on the public Home Credit
 data, then turns that score into a probability.
@@ -528,10 +528,10 @@ repo = "second-look"
 kind = "other"
 live_url = "https://iliya-valizadeh.github.io/second-look/"
 metrics_file = "reports/metrics.json"
-title = "second-look"
+title = "Second Look, a statement checker"
 summary = """
 Reads a bank or card statement in your browser and flags charges worth a second look.
-Nothing is uploaded, and so far I have tested it on synthetic statements only.
+Nothing is uploaded.
 {{ second_look.failure_bar_passed }}
 """
 page = "for-everyone/second-look.html"
@@ -543,10 +543,9 @@ if_true = """
 It met the bar I set for it before I saw any result.
 """
 if_false = """
-It did not meet the bar I set for it before I saw any result. One check that fell
-short: on synthetic statements, {{ second_look.recurring_precision }} of its
-recurring-charge flags are right, which is below the bar. The repo reports this
-instead of moving the bar.
+On synthetic statements, {{ second_look.recurring_precision }} of its recurring-charge
+flags are right. That is under the bar I set before the first test, and the repo
+reports the miss instead of moving the bar.
 """
 
 [[project.number]]
@@ -672,7 +671,7 @@ decimals = 0
 repo = "household-credit-stress"
 kind = "other"
 metrics = false
-title = "household-credit-stress"
+title = "Household credit stress"
 summary = """
 A stress test for Canadian mortgage arrears. It forecasts each month before the
 official numbers come out, then grades its own forecasts in public. None of them has
