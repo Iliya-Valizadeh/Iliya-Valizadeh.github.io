@@ -28,7 +28,7 @@ For the checkers:
 ## Decision
 
 Checkers: option 3. These files are copied byte for byte from `ds-project-standard` at
-commit `602ec779782c7466703a2093832e0e091c3316b8`: `tools/_markdown.py`,
+commit `338cfd4ce69dd72aac64ed366678f6a3c10e7d81`: `tools/_markdown.py`,
 `tools/writing_style_check.py`, `tools/readability_check.py`, `tools/claims_check.py`,
 `tools/links_check.py` and `tools/lychee.toml`. `tools/readme_sections.py` is not
 copied, because no file here uses the project README layout. `tools/SOURCE.json`
@@ -88,3 +88,8 @@ it on the local build and records the scores in `reports/lighthouse.json`.
   If a later reading finds a problem in them, I fix it by hand.
 - A newer version of the tools needs a new copy and a new `tools/SOURCE.json`, made on
   purpose.
+
+## Update, 2026-10-30
+
+The tools were copied again from `ds-project-standard` v1.2, where the style checker
+was renamed. The other files did not change.
