@@ -7,7 +7,7 @@ Date: 2026-09-26. Status: accepted.
 Plan section `5.7` asks for a Home page with three work projects and the public tool,
 and a case-study page per project. The plan's third work project
 is Phase C. Phase C has not started, because it needs a Kaggle
-key that only Iliya can set up. The profile repo has the same gap: the plan's "six
+key that I had not set up yet. The profile repo has the same gap: the plan's "six
 pinned projects" become five rows there for now. The site must not suggest that a
 project exists before it does.
 
@@ -29,7 +29,7 @@ Option 3. Each `[[project]]` entry in `projects.toml` has a `kind`:
   to its live page. There is no "Find it in the report" demo, because it was not
   built.
 - `standard`: a repo of rules and templates. Today: `ds-project-standard` and
-  `.github`. They are linked from the text about how Iliya works. They get no card
+  `.github`. They are linked from the text about how I work. They get no card
   and no number.
 
 So the Home page shows two work projects and one public tool for now, not three work
