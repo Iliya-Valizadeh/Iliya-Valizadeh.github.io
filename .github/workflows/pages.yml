@@ -82,7 +82,7 @@ jobs:
       - name: Vendored-tools guard (byte for byte, per ADR 0004)
         run: uv run pytest tests/test_vendored_tools.py tests/test_shared_numbers.py --no-cov
 
-      - name: AI-writing signs (zero flags)
+      - name: Writing-style check (zero flags)
         run: uv run python tools/ai_signs_check.py README.md docs _build/md CLAIMS.md
         env:
           PYTHONPATH: tools
