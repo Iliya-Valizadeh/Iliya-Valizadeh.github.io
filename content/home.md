@@ -1,24 +1,15 @@
 ---
-title: Iliya Valizadeh | Data science that shows its work
-description: Iliya Valizadeh studies data science at York University in Toronto. Every number in his projects traces back to the script that made it, and two small models run on this page.
+title: Iliya Valizadeh | Data science projects
+description: Iliya Valizadeh is a third-year data science student at York University in Toronto, open to a Winter 2027 co-op or a Summer 2027 internship. His projects show where each number comes from.
 ---
-<!-- slot: idea -->
-Data science that shows its work.
+<!-- slot: intro -->
+I'm a third-year BSc Data Science student at York University in Toronto, and I
+graduate in April 2028. I'm in York's co-op program. I'm open to a Winter 2027 co-op
+(4, 8 or 12 months) or a Summer 2027 internship in data engineering, data science or
+analytics.
 
-<!-- slot: seeking -->
-Seeking a Winter 2027 co-op or Summer 2027 internship in data engineering, data science or analytics. I graduate in April 2028.
-
-<!-- slot: work_intro -->
-Each project ties every number to the script that made it, records its design choices,
-and has a page on what is weak. This page reads each number from the project's own
-results file when the site is built. It shows a number only if that project's
-`CLAIMS.md` lists it. The commit each number came from is in
-[sources.json](sources.json).
-
-<!-- slot: how_i_work -->
-Each project now uses the same template,
-[ds-project-standard](https://github.com/Iliya-Valizadeh/ds-project-standard). The two
-older projects moved onto it after they were built. The template gives every repo the
-same docs, tests and checks. A build stops when a number has no source,
-a page is hard to read, or a link is broken. The shared issue forms and the pull
-request checklist are in [.github](https://github.com/Iliya-Valizadeh/.github).
+<!-- slot: about -->
+I build data projects end to end, and I write down where each one is weak. Every
+number on this page is read from the project's own results file when the site is
+built. The site shows a number only if that project's `CLAIMS.md` lists it, and
+[sources.json](sources.json) records the commit each number came from.
