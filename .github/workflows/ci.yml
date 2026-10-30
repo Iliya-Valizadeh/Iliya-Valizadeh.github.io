@@ -50,7 +50,7 @@ jobs:
       - name: Build the site from the saved fixtures
         run: uv run python build.py --offline
 
-      - name: AI-writing signs (zero flags)
+      - name: Writing-style check (zero flags)
         run: uv run python tools/ai_signs_check.py README.md docs _build/md CLAIMS.md
 
       - name: Readability (notes and For everyone pages at the plain limit)

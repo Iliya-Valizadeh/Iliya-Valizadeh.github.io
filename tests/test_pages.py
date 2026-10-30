@@ -1,4 +1,4 @@
-"""Tests for the Home and About pages, per docs/decisions/0007-home-and-about-pages.md.
+"""Tests for the Home and About pages, per docs/decisions/0007 and 0015.
 
 All offline, against `tests/fixtures/`.
 """
@@ -45,40 +45,61 @@ def _numbers() -> build_module.Numbers:
 # ------------------------------------------------------------------ the Home page
 
 
-def test_home_cards_are_work_then_tool_and_no_standard(built: tuple[Path, Path]) -> None:
-    ids = re.findall(r'<article class="proj" id="([^"]+)">', _home(built))
-    assert ids == ["credit-risk-scorecard", "bank-filings-rag", "second-look"]
+def test_home_leads_with_the_three_featured_projects_in_order(built: tuple[Path, Path]) -> None:
+    ids = re.findall(r'<article class="project" id="([^"]+)">', _home(built))
+    assert ids == ["nyc-rideshare-congestion", "bank-filings-rag", "credit-risk-scorecard"]
+
+
+def test_home_lists_the_other_projects_and_no_standard(built: tuple[Path, Path]) -> None:
+    ids = re.findall(r'<li id="([^"]+)">', _home(built))
+    assert ids == ["second-look", "household-credit-stress", "ds-project-standard"]
 
 
 def test_home_numbers_come_from_the_fixtures(built: tuple[Path, Path]) -> None:
     html = _home(built)
-    assert '<div class="pmetric"><b>0.769</b>' in html
-    assert '<div class="pmetric"><b>0.58</b>' in html
-    assert '<div class="pmetric"><b>0.9588</b><span>recurring recall, synthetic' in html
+    assert ">ROC-AUC</a> of 0.769 on the test set (95% interval 0.762 to 0.775)" in html
+    assert "0.58 of the time (95% interval 0.33 to 0.83)" in html
+    assert "kept 532,128,361 rows and set aside 114,113 rows" in html
+    assert "The congestion pricing result is still to come." in html
 
 
-def test_home_links_the_live_tool(built: tuple[Path, Path]) -> None:
-    assert 'href="https://iliya-valizadeh.github.io/second-look/"' in _home(built)
-
-
-def test_home_says_seeking_a_co_op_and_the_idea(built: tuple[Path, Path]) -> None:
+def test_home_charts_link_their_source_files(built: tuple[Path, Path]) -> None:
     html = _home(built)
-    assert "Seeking a Winter 2027 co-op" in html
-    assert "Data science that shows its work." in html
+    charts = {
+        "bank-filings-rag-hit-at-5.png": "bank-filings-rag/blob/main/reports/figures/hit_at_5.png",
+        "credit-risk-scorecard-calibration.png": (
+            "credit-risk-scorecard/blob/main/reports/figures/calibration.png"
+        ),
+    }
+    for chart, source in charts.items():
+        assert f'<img src="static/charts/{chart}" alt="' in html
+        assert f'href="https://github.com/Iliya-Valizadeh/{source}"' in html
+    assert len(re.findall(r'<img [^>]*alt="[^"]{40,}"', html)) == 2
+
+
+def test_home_links_the_live_tool_and_the_resume(built: tuple[Path, Path]) -> None:
+    html = _home(built)
+    assert 'href="https://iliya-valizadeh.github.io/second-look/"' in html
+    assert '<a href="resume.pdf">Resume (PDF)</a>' in html
+
+
+def test_home_says_co_op_and_dates(built: tuple[Path, Path]) -> None:
+    html = _home(built)
+    assert "in York&#x27;s co-op program." in html or "in York's co-op program." in html
+    assert "Winter 2027 co-op" in html
+    assert "Summer 2027 internship" in html
+    assert "April 2028" in html
+    assert "co-op stream" not in html
 
 
 def test_home_shows_the_failed_bar_from_metrics(built: tuple[Path, Path]) -> None:
     assert "did not meet the bar I set" in _home(built)
 
 
-def test_home_has_no_decorative_sparklines(built: tuple[Path, Path]) -> None:
-    assert 'class="spk"' not in _home(built)
-
-
-def test_pages_load_the_right_script(built: tuple[Path, Path]) -> None:
-    assert '<script src="static/main.js" defer>' in _home(built)
-    about = (built[0] / "about.html").read_text(encoding="utf-8")
-    assert '<script src="static/site.js" defer>' in about
+def test_home_has_none_of_the_removed_decoration(built: tuple[Path, Path]) -> None:
+    html = _home(built)
+    for gone in ("predict_proba", 'class="dot', "Move something", 'id="risk"', 'id="fit"'):
+        assert gone not in html
 
 
 def test_markdown_record_holds_every_page(built: tuple[Path, Path]) -> None:
@@ -113,13 +134,14 @@ Next.
 """
 
 
-def test_a_new_work_project_gets_a_card_with_no_template_change(
+def test_a_new_featured_project_needs_no_template_change(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """ADR 0003 and ADR 0008: adding a project is one config entry and one page."""
+    """ADR 0008 and ADR 0015: adding a project is one config entry and one page."""
     extra = (
-        '\n[[project]]\nrepo = "made-up-example"\nkind = "work"\nmetrics = false\n'
-        'title = "A made-up example"\nsummary = "Only here for a test."\n'
+        '\n[[project]]\nrepo = "made-up-example"\nkind = "featured"\nmetrics = false\n'
+        'title = "A made-up example"\nresult = "Only here for a test."\n'
+        'page = "projects/made-up-example.html"\n'
     )
     config_path = tmp_path / "projects.toml"
     config_path.write_text(
@@ -132,29 +154,26 @@ def test_a_new_work_project_gets_a_card_with_no_template_change(
     monkeypatch.setattr(build_module, "SITE_DIR", tmp_path / "_site")
     monkeypatch.setattr(build_module, "BUILD_MD_DIR", tmp_path / "_build" / "md")
 
-    # With no page of its own, the build stops: no card without a page.
+    # With a page set but no content file for it, the build stops.
     with pytest.raises(build_module.BuildError, match="missing content"):
         build_module.build(offline=True)
 
     (content / "projects" / "made-up-example.md").write_text(MADE_UP_PAGE, encoding="utf-8")
     build_module.build(offline=True)
     html = (tmp_path / "_site" / "index.html").read_text(encoding="utf-8")
-    ids = re.findall(r'<article class="proj" id="([^"]+)">', html)
-    assert ids == ["credit-risk-scorecard", "bank-filings-rag", "made-up-example", "second-look"]
+    ids = re.findall(r'<article class="project" id="([^"]+)">', html)
+    assert ids[-1] == "made-up-example"
     assert 'href="projects/made-up-example.html"' in html
     assert (tmp_path / "_site" / "projects" / "made-up-example.html").is_file()
 
 
-# ------------------------------------------------------------------ site.js
-
-
-def test_site_js_blocks_are_copied_from_main_js() -> None:
-    main = (ROOT / "static" / "main.js").read_text(encoding="utf-8")
-    site = (ROOT / "static" / "site.js").read_text(encoding="utf-8")
-    blocks = re.findall(r"/\* [a-z +,]+ \*/\n\(function\(\)\{.*?\n\}\)\(\);", site, re.S)
-    assert len(blocks) == 4
-    for block in blocks:
-        assert block in main
+def test_png_size_reads_the_header_and_rejects_other_files(tmp_path: Path) -> None:
+    chart = build_module.CHARTS_DIR / "credit-risk-scorecard-calibration.png"
+    assert build_module.png_size(chart) == (597, 609)
+    bad = tmp_path / "x.png"
+    bad.write_bytes(b"not a png at all, just some bytes")
+    with pytest.raises(build_module.BuildError, match="not a PNG"):
+        build_module.png_size(bad)
 
 
 # ------------------------------------------------------------------ number and flag rules
@@ -192,25 +211,15 @@ def test_json_flag_rejects_a_missing_path_and_a_non_boolean() -> None:
         build_module.json_flag({"a": 1}, "a")
 
 
-def test_synthetic_metric_label_must_say_synthetic() -> None:
+def test_synthetic_number_in_a_featured_result_needs_the_word() -> None:
     project = build_module.SiteProject(
         repo="second-look",
-        kind="tool",
+        kind="featured",
         title="t",
-        summary="s",
-        metric="second_look.recurring_recall",
-        metric_label="recall",
+        result="Recall is {{ second_look.recurring_recall }}.",
     )
     with pytest.raises(build_module.BuildError, match="synthetic"):
-        build_module.project_card(1, project, _numbers(), {})
-
-
-def test_metric_must_be_a_configured_number() -> None:
-    project = build_module.SiteProject(
-        repo="r", kind="work", title="t", summary="s", metric="no.such", metric_label="x"
-    )
-    with pytest.raises(build_module.BuildError, match="not a number"):
-        build_module.project_card(1, project, _numbers(), {})
+        build_module.featured_entry(project, _numbers(), {})
 
 
 # ------------------------------------------------------------------ config and content errors
@@ -219,10 +228,25 @@ def test_metric_must_be_a_configured_number() -> None:
 @pytest.mark.parametrize(
     ("entry", "message"),
     [
-        ('repo = "a"\nkind = "other"', "kind must be"),
-        ('repo = "a"\nkind = "work"', "title and a summary"),
-        ('repo = "a"\nkind = "standard"\ntitle = "t"', "no card"),
-        ('repo = "a"\nkind = "work"\ntitle = "t"\nsummary = "s"\nmetric = "m"', "go together"),
+        ('repo = "a"\nkind = "work"', "kind must be"),
+        ('repo = "a"\nkind = "featured"\ntitle = "t"', "title and a result"),
+        ('repo = "a"\nkind = "other"\ntitle = "t"', "title and a summary"),
+        ('repo = "a"\nkind = "standard"\ntitle = "t"', "no entry"),
+        (
+            'repo = "a"\nkind = "featured"\ntitle = "t"\nresult = "r"\nchart = "c.png"',
+            "go together",
+        ),
+        (
+            'repo = "a"\nkind = "featured"\ntitle = "t"\nresult = "r"\nchart = "none.png"\n'
+            'chart_source = "s"\nchart_alt = "a"\nchart_caption = "c"',
+            "chart file not found",
+        ),
+        (
+            'repo = "a"\nkind = "other"\ntitle = "t"\nsummary = "s"\nchart = "c.png"\n'
+            'chart_source = "s"\nchart_alt = "a"\nchart_caption = "c"',
+            "only a featured",
+        ),
+        ('repo = "a"\nkind = "other"\ntitle = "t"\nsummary = "s"\npage = "../x.html"', "page must"),
     ],
 )
 def test_bad_site_config_fails(tmp_path: Path, entry: str, message: str) -> None:

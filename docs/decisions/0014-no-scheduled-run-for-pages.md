@@ -7,7 +7,7 @@ Date: 2026-10-20. Status: accepted. Replaces the daily run described in
 
 `pages.yml` had a daily `cron` trigger, so the site's numbers would follow the source
 repos even when nobody pushed here. Workspace rule 6 says a scheduled workflow must
-never be able to fail again and again, because every failed run emails Iliya.
+never be able to fail again and again, because every failed run emails me.
 
 This one could. The scheduled run builds from the live results files in the other
 repos, with no `--offline`, and the build stops on any check failure by design. Three
@@ -34,10 +34,10 @@ Option 1 hides a real failure: the site would go stale and nothing would say so.
 also adds a special case to a workflow that is otherwise a plain build.
 
 There is no clear need for the schedule. The numbers on the site change only when a
-project's own results file changes, and Iliya makes those changes. After one, a push to
+project's own results file changes, and I make those changes. After one, a push to
 this repo or the "Run workflow" button rebuilds the site with the new numbers, and the
 build checks them before anything is published. A site that is a little stale is not
-harmful. A site that fails every day and emails him is.
+harmful. A site that fails every day and emails me is.
 
 Nothing else changes: `pages.yml` still runs on pushes to `main` and on
 `workflow_dispatch`, skips itself until the Pages source is set to GitHub Actions, and

@@ -4,7 +4,7 @@ name: Build and deploy the site to Pages
 # - Runs on pushes to `main` and on workflow_dispatch (the "Run workflow" button, to
 #   refresh the numbers after a source repo changes). It has no schedule: a daily run
 #   read the live source repos, so an outage or a changed number there would have
-#   failed it every day and emailed Iliya every day (ADR 0014). Never on other
+#   failed it every day and emailed me every day (ADR 0014). Never on other
 #   branches: this workflow has no `branches:` filter on `push` other than `main`.
 # - The `check` job asks the Pages API whether this repo's Pages source is set to
 #   "GitHub Actions". If not, `build` and `deploy` are skipped, not failed, so an
@@ -82,7 +82,7 @@ jobs:
       - name: Vendored-tools guard (byte for byte, per ADR 0004)
         run: uv run pytest tests/test_vendored_tools.py tests/test_shared_numbers.py --no-cov
 
-      - name: AI-writing signs (zero flags)
+      - name: Writing-style check (zero flags)
         run: uv run python tools/ai_signs_check.py README.md docs _build/md CLAIMS.md
         env:
           PYTHONPATH: tools
