@@ -86,7 +86,7 @@ The footer:
 
 - The old footer said the page was hand written with no framework and no template.
   The new line says it is built from templates by a small Python script, with no
-  framework. Iliya picks the final words (a "Needs Iliya" item quotes both).
+  framework. I pick the final words.
 
 ## Consequences
 

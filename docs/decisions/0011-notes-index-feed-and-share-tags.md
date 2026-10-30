@@ -43,7 +43,7 @@ Option 2 in both cases.
   `https://iliya-valizadeh.github.io`.
 - The card is `summary`, not `summary_large_image`, because the site has no share
   image yet. Adding one means a picture file and an `og:image` tag. That is a design
-  choice for Iliya.
+  choice for me.
 - The nav gets a Notes link on every page.
 - Drafts are left out of all three files, by the same list ADR 0005 uses. A published
   note is the only thing the list is built from, so a draft has no path into them.

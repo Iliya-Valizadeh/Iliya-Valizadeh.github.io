@@ -37,7 +37,7 @@ differs. `tools/README.md` says not to edit them here.
 
 The writing checks read Markdown, so they run on `_build/md/`, where the build writes
 every page and note as filled-in Markdown, drafts included. Drafts are checked too,
-because Iliya should get clean drafts to edit.
+because I want clean drafts to edit.
 
 The gates, run in `ci.yml` on every push and pull request with `--offline`, and again
 in `pages.yml` on the live build before deploying:
@@ -85,6 +85,6 @@ it on the local build and records the scores in `reports/lighthouse.json`.
   templates hold markup and short labels only, as
   [ADR 0001](0001-a-small-python-build-deployed-by-actions.md) says. The verbatim
   partials are not rewritten in this phase, so the writing checks do not read them.
-  If a later reading finds a problem in them, it goes to Iliya.
+  If a later reading finds a problem in them, I fix it by hand.
 - A newer version of the tools needs a new copy and a new `tools/SOURCE.json`, made on
   purpose.
