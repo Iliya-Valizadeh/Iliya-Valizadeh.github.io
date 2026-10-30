@@ -17,7 +17,7 @@ SOURCE = json.loads((TOOLS / "SOURCE.json").read_text(encoding="utf-8"))
 
 
 def test_source_json_names_the_vendored_commit() -> None:
-    assert SOURCE["source_commit"] == "602ec779782c7466703a2093832e0e091c3316b8"
+    assert SOURCE["source_commit"] == "338cfd4ce69dd72aac64ed366678f6a3c10e7d81"
 
 
 def test_every_vendored_file_matches_its_recorded_hash() -> None:
