@@ -5,7 +5,12 @@
 # and the share tags in every page. Before the site is deployed, those pages do not exist
 # yet, so a check would fail for the wrong reason. Links between the built pages are
 # relative, so lychee still checks them as files. The live site is checked once, after
-# the deploy, by the merge task.
+# the deploy.
+#
+# One more single exclusion: the "Resume (PDF)" link points at /resume.pdf, a file I add
+# by hand when my resume is ready (ADR 0015). Until then that one built-site file is
+# skipped. The pattern matches only `_site/resume.pdf`, so every other local file link
+# is still checked.
 #
 # Run: lychee --config lychee.site.toml './_site/**/*.html' README.md CLAIMS.md './docs/**/*.md'
 
@@ -27,6 +32,7 @@ exclude = [
     '^https?://(www\.)?linkedin\.com/',
     '^https?://(www\.)?example\.(com|org|net)',
     '^https://iliya-valizadeh\.github\.io/',
+    '^file://.*/_site/resume\.pdf$',
 ]
 
 exclude_path = [
