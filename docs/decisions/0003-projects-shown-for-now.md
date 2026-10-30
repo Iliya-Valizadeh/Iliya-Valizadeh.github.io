@@ -1,6 +1,6 @@
 # 0003: The projects the site shows for now, with room for one more
 
-Date: 2026-09-26. Status: accepted.
+Date: 2026-09-26. Status: accepted, then partly replaced by [ADR 0015](0015-one-plain-column.md). <!-- not-a-claim -->
 
 ## Context
 
