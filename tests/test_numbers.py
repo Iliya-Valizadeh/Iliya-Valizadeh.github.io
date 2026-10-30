@@ -35,7 +35,8 @@ def test_every_metrics_bearing_project_has_a_fixture() -> None:
         if not project.numbers:
             continue
         assert (FIXTURES / project.repo / "CLAIMS.md").is_file(), project.repo
-        assert (FIXTURES / project.repo / "reports_metrics.json").is_file(), project.repo
+        metrics = project.metrics_file.replace("/", "_")
+        assert (FIXTURES / project.repo / metrics).is_file(), project.repo
 
 
 def test_allowed_values_covers_the_real_headline_numbers(allowed: set[Decimal]) -> None:
@@ -43,6 +44,7 @@ def test_allowed_values_covers_the_real_headline_numbers(allowed: set[Decimal]) 
     assert Decimal("0.769") in allowed  # credit-risk-scorecard LightGBM ROC-AUC
     assert Decimal("0.58") in allowed  # bank-filings-rag hit@5
     assert Decimal("0.9588") in allowed  # second-look recurring recall
+    assert Decimal("532128361") in allowed  # nyc-rideshare-congestion rows kept
 
 
 def test_a_number_not_in_the_allowed_set_fails(tmp_path: Path, allowed: set[Decimal]) -> None:

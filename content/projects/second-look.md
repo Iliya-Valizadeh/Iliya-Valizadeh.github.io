@@ -1,6 +1,6 @@
 ---
 title: second-look, for everyone | Iliya Valizadeh
-description: second-look reads a bank or card statement in your browser and points out charges worth a second look. Nothing is uploaded. So far it has been tested on synthetic statements only.
+description: second-look reads a bank or card statement in your browser and points out charges worth a second look. Nothing is uploaded. So far I have tested it on synthetic statements only.
 synthetic_only: yes
 ---
 <!-- slot: lede -->

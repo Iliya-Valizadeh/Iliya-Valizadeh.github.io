@@ -58,16 +58,17 @@ def _md(built: tuple[Path, Path], repo: str) -> str:
 def test_each_page_links_back_from_its_folder(built: tuple[Path, Path], repo: str) -> None:
     html = _html(built, repo)
     assert 'href="../static/style.css"' in html
-    assert '<script src="../static/site.js" defer>' in html
+    assert "<script" not in html
     assert 'href="../about.html"' in html
-    assert 'href="../index.html#work"' in html
+    assert 'href="../index.html#projects"' in html
+    assert 'href="../resume.pdf">Resume (PDF)</a>' in html
     assert f'href="https://github.com/Iliya-Valizadeh/{repo}"' in html
 
 
 @pytest.mark.parametrize("repo", sorted(PAGES))
 def test_each_page_says_what_is_weak(built: tuple[Path, Path], repo: str) -> None:
     html = _html(built, repo)
-    match = re.search(r'<aside class="weak"[^>]*>(.*?)</aside>', html, re.S)
+    match = re.search(r'<section class="weak"[^>]*>(.*?)</section>', html, re.S)
     assert match, f"{repo} has no 'What's weak' box"
     assert "What's weak" in match.group(1)
     assert "<li>" in match.group(1)
@@ -197,7 +198,7 @@ def test_a_number_id_used_twice_fails() -> None:
     site = [
         build_module.SiteProject(
             repo="bank-filings-rag",
-            kind="work",
+            kind="featured",
             row_numbers=(
                 build_module.RowNumber("dup", "Fixed-chunk size, in words", 0),
                 build_module.RowNumber("dup", "Fixed-chunk size, in words", 0),
@@ -215,13 +216,13 @@ def test_a_number_id_used_twice_fails() -> None:
     ("entry", "message"),
     [
         (
-            'repo = "a"\nkind = "work"\ntitle = "t"\nsummary = "s"\n'
+            'repo = "a"\nkind = "other"\ntitle = "t"\nsummary = "s"\n'
             '[[project.row_number]]\nid = "x"\nrow = "r"\nindex = -1',
             "index of 0 or more",
         ),
         (
             'repo = "a"\nkind = "standard"\n[[project.row_number]]\nid = "x"\nrow = "r"\nindex = 0',
-            "no card",
+            "no entry",
         ),
     ],
 )

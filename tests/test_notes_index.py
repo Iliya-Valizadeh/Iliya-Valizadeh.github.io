@@ -149,8 +149,11 @@ def test_page_url() -> None:
     assert build_module.page_url("about.html") == f"{SITE}/about.html"
 
 
-def test_the_nav_links_to_notes_from_every_depth(built: Path) -> None:
-    assert 'href="notes/index.html">Notes</a>' in (built / "index.html").read_text(encoding="utf-8")
+def test_home_links_notes_only_once_one_is_published(built: Path, published: Path) -> None:
+    # ADR 0015: with no published note, Home does not point at an empty Notes page.
+    assert 'href="notes/index.html"' not in (built / "index.html").read_text(encoding="utf-8")
+    assert 'href="notes/index.html">notes</a>' in (published / "index.html").read_text(
+        encoding="utf-8"
+    )
     note_index = (built / "notes" / "index.html").read_text(encoding="utf-8")
-    assert 'href="../notes/index.html">Notes</a>' in note_index
     assert 'href="../feed.xml">RSS feed</a>' in note_index
