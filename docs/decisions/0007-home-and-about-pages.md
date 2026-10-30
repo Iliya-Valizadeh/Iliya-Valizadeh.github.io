@@ -1,6 +1,6 @@
 # 0007: The Home and About pages
 
-Date: 2026-09-28. Status: accepted.
+Date: 2026-09-28. Status: accepted, then partly replaced by [ADR 0015](0015-one-plain-column.md). <!-- not-a-claim -->
 
 ## Context
 
@@ -86,7 +86,7 @@ The footer:
 
 - The old footer said the page was hand written with no framework and no template.
   The new line says it is built from templates by a small Python script, with no
-  framework. Iliya picks the final words (a "Needs Iliya" item quotes both).
+  framework. I pick the final words.
 
 ## Consequences
 

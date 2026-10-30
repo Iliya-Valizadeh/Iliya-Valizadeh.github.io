@@ -6,7 +6,7 @@ Date: 2026-09-28. Status: accepted.
 
 ADR 0001 puts notes in `notes/`, one Markdown file each. ADR 0005 says how a draft
 stays out of the site. The first note needed three more choices: the exact file
-layout, how Iliya can read a draft before he publishes it, and how a note shows a
+layout, how I can read a draft before I publish it, and how a note shows a
 chart without a typed number.
 
 ## Options
@@ -25,7 +25,7 @@ drawn by `build.py` from the same built numbers as the text can be checked.
 Option 2, and charts drawn by the build.
 
 - A note starts with one status line: `DRAFT: Iliya to edit`, or
-  `Published: YYYY-MM-DD` once he publishes it. Then comes front matter with `title`
+  `Published: YYYY-MM-DD` once I publish it. Then comes front matter with `title`
   and `description`, then the body. Numbers in the body are `{{ placeholders }}`, the
   same as every other page (ADR 0002).
 - A draft's filled-in Markdown goes to `_build/md/drafts/notes/`, where the writing and
@@ -43,6 +43,6 @@ under `_site/` names the draft note, so they will be covered from their first bu
 
 ## Consequences
 
-- Iliya reads a draft at `_build/preview/notes/<name>.html` after `python build.py`.
-- Publishing is still one line: he swaps the marker for a `Published:` line.
+- I read a draft at `_build/preview/notes/<name>.html` after `python build.py`.
+- Publishing is still one line: I swap the marker for a `Published:` line.
 - A chart cannot drift from the text, because both come from the same numbers.

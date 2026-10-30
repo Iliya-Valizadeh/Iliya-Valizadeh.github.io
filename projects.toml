@@ -1,18 +1,24 @@
 # The projects the site shows and the numbers it may use, per docs/decisions/0001,
-# 0002, 0003 and 0007.
+# 0002 and 0015.
 #
 # The number entries have the same shape as the profile repo's projects.toml, because
 # both are read by the shared code in scripts/shared/render_readme.py (ADR 0002). The
 # rest is this site's own, read by build.py:
 #
-# - `kind` (ADR 0003): "work" and "tool" get a card on the Home page, in that order.
-#   "standard" gets a link from the Home page text and no card, number or flag.
-# - `title`, `tags`, `summary`, `finding`, `headline`: the card's words, in Markdown.
-#   They may use `{{ id }}` number placeholders defined below. A sentence that uses a
-#   number marked `synthetic = true` must say "synthetic", or the build stops.
-# - `metric` and `metric_label`: the one number shown large on the card, and its label.
+# - `kind` (ADR 0015): "featured" projects lead the Home page, in the order of this
+#   file. "other" projects get one short entry each under them. "standard" gets nothing.
+# - A featured project needs `title` and `result`, and may have `about` (one line on
+#   what it is). Its chart is `chart` (a file in static/charts/, copied from the
+#   repo), `chart_source` (that file's path in the repo), `chart_alt` and
+#   `chart_caption`. The four go together. An "other" project needs `title` and
+#   `summary`.
+# - `page` is the project's own page on this site, built from
+#   content/projects/<repo>.md. `live_url` is a working copy people can try.
+# - Prose is Markdown and may use `{{ id }}` number placeholders defined below. A
+#   sentence that uses a number marked `synthetic = true` must say "synthetic", or the
+#   build stops.
 # - `[[project.flag]]`: a true/false value in metrics.json, shown as one of two
-#   sentences (`if_true`, `if_false`). The finding uses it by its `id`.
+#   sentences (`if_true`, `if_false`).
 #
 # Additions from ADR 0008, read by build.py only:
 #
@@ -22,38 +28,214 @@
 # - `[[project.row_number]]` is a row entry: the number at position `index` (from 0)
 #   of the Value cell of CLAIMS.md row `row`, shown as written. Only for rows whose
 #   Source is not a JSON file.
-# - Each `work` and `tool` project has a page, built from content/projects/<repo>.md.
 #
-# `metrics = false` means the repo has no reports/metrics.json: no metrics_file, no
-# numbers, no headline. Per ADR 0003, a project that does not exist yet has no entry.
+# `metrics = false` means the repo has no results file: no metrics_file and no numbers.
+
+[[project]]
+repo = "nyc-rideshare-congestion"
+kind = "featured"
+metrics_file = "reports/load_summary.json"
+title = "nyc-rideshare-congestion"
+about = """
+A tested pipeline for New York City's Uber and Lyft trip records, built to study what
+the congestion toll on lower Manhattan changed.
+"""
+result = """
+The pipeline fetched {{ nrc.files_fetched }} monthly trip files (January 2023 to March
+2025) and loaded every one: it kept {{ nrc.rows_kept }} rows and set aside
+{{ nrc.rows_quarantined }} rows that failed a check. The congestion pricing result is
+still to come.
+"""
+
+[[project.number]]
+id = "nrc.files_fetched"
+file = "reports/source_manifest.json"
+path = "file_count"
+row = "Monthly HVFHV files fetched, 2023-01 to 2025-03"
+decimals = 0
+
+[[project.number]]
+id = "nrc.rows_kept"
+path = "totals.rows_kept"
+row = "Rows kept, all 27 months"
+decimals = 0
+thousands = true
+
+[[project.number]]
+id = "nrc.rows_quarantined"
+path = "totals.rows_quarantined"
+row = "Rows quarantined, all 27 months"
+decimals = 0
+thousands = true
+
+[[project]]
+repo = "bank-filings-rag"
+kind = "featured"
+metrics_file = "reports/metrics.json"
+title = "bank-filings-rag"
+about = """
+Answers questions about RBC's 2024 Annual Report and names the page each answer came
+from.
+"""
+result = """
+On {{ bank_filings_rag.n_verified }} questions I checked by hand, the right page was in
+the top five results
+([hit@5](https://github.com/Iliya-Valizadeh/bank-filings-rag/blob/main/docs/glossary.md#hit5))
+{{ bank_filings_rag.hit5 }} of the time ({{ bank_filings_rag.interval_level }} interval
+{{ bank_filings_rag.hit5_lo }} to {{ bank_filings_rag.hit5_hi }}), against
+{{ bank_filings_rag.baseline_hit5 }} for fixed-size chunks, but the intervals overlap,
+so no setup clearly wins yet.
+"""
+chart = "bank-filings-rag-hit-at-5.png"
+chart_source = "reports/figures/hit_at_5.png"
+chart_alt = "Bar chart of hit@5 for three ways of splitting the report and three search methods, with error bars. Hybrid search over whole pages has the highest bar, and every error bar overlaps the others."
+chart_caption = """
+Hybrid search (green) scores highest in every split, but the error bars are wide
+because there are few questions.
+"""
+page = "projects/bank-filings-rag.html"
+
+[[project.number]]
+id = "bank_filings_rag.hit5"
+path = "headline.model.value"
+row = "Headline [hit@5](docs/glossary.md#hit5), whole pages + hybrid, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.hit5_lo"
+path = "headline.model.ci_low"
+row = "Headline [hit@5](docs/glossary.md#hit5), whole pages + hybrid, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.hit5_hi"
+path = "headline.model.ci_high"
+row = "Headline [hit@5](docs/glossary.md#hit5), whole pages + hybrid, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.baseline_hit5"
+path = "headline.baseline.value"
+row = "[Baseline](docs/glossary.md#baseline) hit@5, fixed chunks + dense, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.baseline_hit5_lo"
+path = "headline.baseline.ci_low"
+row = "[Baseline](docs/glossary.md#baseline) hit@5, fixed chunks + dense, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.baseline_hit5_hi"
+path = "headline.baseline.ci_high"
+row = "[Baseline](docs/glossary.md#baseline) hit@5, fixed chunks + dense, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.interval_level"
+path = "interval.level"
+row = "Confidence level for every interval"
+decimals = 0
+percent = true
+
+[[project.number]]
+id = "bank_filings_rag.n_verified"
+path = "n_questions.verified"
+row = "Hand-checked questions"
+decimals = 0
+
+[[project.number]]
+id = "bank_filings_rag.n_all"
+path = "n_questions.all"
+row = "Questions in the [answer key](docs/glossary.md#answer-key)"
+decimals = 0
+
+# List items in a JSON path (ADR 0008): results.6 is whole pages + dense search,
+# results.8 whole pages + hybrid, results.2 fixed chunks + hybrid.
+[[project.number]]
+id = "bank_filings_rag.dense_pages_hit5"
+path = "results.6.verified.hit_at_k.value"
+row = "hit@5, whole pages + dense, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.dense_pages_hit5_lo"
+path = "results.6.verified.hit_at_k.ci_low"
+row = "hit@5, whole pages + dense, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.dense_pages_hit5_hi"
+path = "results.6.verified.hit_at_k.ci_high"
+row = "hit@5, whole pages + dense, 12 questions, with its 95% interval"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.all30_hybrid_pages_hit5"
+path = "results.8.all.hit_at_k.value"
+row = "hit@5, whole pages + hybrid, all 30 questions"
+decimals = 2
+
+[[project.number]]
+id = "bank_filings_rag.all30_hybrid_chunks_hit5"
+path = "results.2.all.hit_at_k.value"
+row = "hit@5, fixed chunks + hybrid, all 30 questions"
+decimals = 2
+
+# Row entries: the Source is a Markdown report or code (ADR 0002, ADR 0008).
+[[project.row_number]]
+id = "bank_filings_rag.n_script_only"
+row = "Questions checked by script only (30 rows minus the 12 marked `hand`)"
+index = 0
+
+[[project.row_number]]
+id = "bank_filings_rag.chunk_words"
+row = "Fixed-chunk size, in words"
+index = 0
+
+[[project.row_number]]
+id = "bank_filings_rag.word_piece_limit"
+row = "[Embedding](docs/glossary.md#embedding) model's word-piece limit"
+index = 0
+
+[[project.row_number]]
+id = "bank_filings_rag.median_word_pieces"
+row = "Median word pieces per page (980.5, rounded)"
+index = 0
+
+[[project.row_number]]
+id = "bank_filings_rag.share_over_limit"
+row = "Pages longer than the word-piece limit"
+index = 0
 
 [[project]]
 repo = "credit-risk-scorecard"
-kind = "work"
+kind = "featured"
 metrics_file = "reports/metrics.json"
-title = "Credit risk model"
-tags = ["Python", "LightGBM", "scikit-learn", "Calibration", "SHAP"]
-summary = """
-A model that ranks loan applicants by the risk that they miss payments, then turns
-that score into a probability. It uses the public Home Credit data from Kaggle.
+title = "credit-risk-scorecard"
+about = """
+Ranks loan applicants by the risk that they miss payments, on the public Home Credit
+data, then turns that score into a probability.
 """
-finding = """
-The class weighting I added pushed the average predicted chance of default to
-{{ credit_risk_scorecard.raw_mean_pd }}, against a real default rate of
-{{ credit_risk_scorecard.observed_default_rate }} on the test set. Calibrating on
-held-out data brought it to {{ credit_risk_scorecard.isotonic_mean_pd }} and left the
-ranking almost the same. Gender is no longer a model input, but other inputs still
-carry it, and the repo shows which ones.
+result = """
+It ranks risky applicants above safe ones with a
+[ROC-AUC](https://github.com/Iliya-Valizadeh/credit-risk-scorecard/blob/main/docs/glossary.md#roc-auc)
+of {{ credit_risk_scorecard.lightgbm_roc_auc }} on the test set
+({{ credit_risk_scorecard.interval_level }} interval
+{{ credit_risk_scorecard.lightgbm_roc_auc_lo }} to
+{{ credit_risk_scorecard.lightgbm_roc_auc_hi }}), against
+{{ credit_risk_scorecard.logreg_roc_auc }} for a logistic regression baseline.
 """
-headline = """
-How well it ranks risky applicants above safe ones
-([ROC-AUC](https://github.com/Iliya-Valizadeh/credit-risk-scorecard/blob/main/docs/glossary.md#roc-auc)):
-{{ credit_risk_scorecard.lightgbm_roc_auc }} on the test set (interval
-{{ credit_risk_scorecard.lightgbm_roc_auc_lo }} to {{ credit_risk_scorecard.lightgbm_roc_auc_hi }}),
-against {{ credit_risk_scorecard.logreg_roc_auc }} for a logistic regression baseline.
+chart = "credit-risk-scorecard-calibration.png"
+chart_source = "reports/figures/calibration.png"
+chart_alt = "Calibration chart: observed default rate against mean predicted probability of default, by decile. The raw model's line sits far below the diagonal, and the two calibrated lines lie close to it."
+chart_caption = """
+The raw model (blue) said the average chance of default was
+{{ credit_risk_scorecard.raw_mean_pd }}, against a real rate of
+{{ credit_risk_scorecard.observed_default_rate }}. Calibration brought it to
+{{ credit_risk_scorecard.isotonic_mean_pd }}.
 """
-metric = "credit_risk_scorecard.lightgbm_roc_auc"
-metric_label = "ROC-AUC on the test set"
+page = "projects/credit-risk-scorecard.html"
 
 [[project.number]]
 id = "credit_risk_scorecard.lightgbm_roc_auc"
@@ -342,172 +524,17 @@ decimals = 1
 percent = true
 
 [[project]]
-repo = "bank-filings-rag"
-kind = "work"
-metrics_file = "reports/metrics.json"
-title = "Document question answering"
-tags = ["Python", "Retrieval", "BM25 + embeddings", "Evaluation"]
-summary = """
-Answers questions about RBC's 2024 Annual Report and names the page each answer came
-from. The text is turned into vectors on my own machine, not sent to a hosted service.
-"""
-finding = """
-The model that turns text into vectors reads only the start of each page, and most
-pages are much longer than that. So search by meaning over whole pages mostly sees the
-top of each page. A model that reads more could change which setup wins.
-"""
-headline = """
-How often the right page is in the top five
-([hit@5](https://github.com/Iliya-Valizadeh/bank-filings-rag/blob/main/docs/glossary.md#hit5)):
-{{ bank_filings_rag.hit5 }} ({{ bank_filings_rag.interval_level }} interval
-{{ bank_filings_rag.hit5_lo }} to {{ bank_filings_rag.hit5_hi }}) on
-{{ bank_filings_rag.n_verified }} hand-checked questions, against
-{{ bank_filings_rag.baseline_hit5 }} ({{ bank_filings_rag.baseline_hit5_lo }} to
-{{ bank_filings_rag.baseline_hit5_hi }}) for fixed-size chunks. The intervals overlap,
-so no setup clearly wins yet.
-"""
-metric = "bank_filings_rag.hit5"
-metric_label = "hit@5 on hand-checked questions"
-
-[[project.number]]
-id = "bank_filings_rag.hit5"
-path = "headline.model.value"
-row = "Headline [hit@5](docs/glossary.md#hit5), whole pages + hybrid, 12 questions, with its 95% interval"
-decimals = 2
-
-[[project.number]]
-id = "bank_filings_rag.hit5_lo"
-path = "headline.model.ci_low"
-row = "Headline [hit@5](docs/glossary.md#hit5), whole pages + hybrid, 12 questions, with its 95% interval"
-decimals = 2
-
-[[project.number]]
-id = "bank_filings_rag.hit5_hi"
-path = "headline.model.ci_high"
-row = "Headline [hit@5](docs/glossary.md#hit5), whole pages + hybrid, 12 questions, with its 95% interval"
-decimals = 2
-
-[[project.number]]
-id = "bank_filings_rag.baseline_hit5"
-path = "headline.baseline.value"
-row = "[Baseline](docs/glossary.md#baseline) hit@5, fixed chunks + dense, 12 questions, with its 95% interval"
-decimals = 2
-
-[[project.number]]
-id = "bank_filings_rag.baseline_hit5_lo"
-path = "headline.baseline.ci_low"
-row = "[Baseline](docs/glossary.md#baseline) hit@5, fixed chunks + dense, 12 questions, with its 95% interval"
-decimals = 2
-
-[[project.number]]
-id = "bank_filings_rag.baseline_hit5_hi"
-path = "headline.baseline.ci_high"
-row = "[Baseline](docs/glossary.md#baseline) hit@5, fixed chunks + dense, 12 questions, with its 95% interval"
-decimals = 2
-
-[[project.number]]
-id = "bank_filings_rag.interval_level"
-path = "interval.level"
-row = "Confidence level for every interval"
-decimals = 0
-percent = true
-
-[[project.number]]
-id = "bank_filings_rag.n_verified"
-path = "n_questions.verified"
-row = "Hand-checked questions"
-decimals = 0
-
-[[project.number]]
-id = "bank_filings_rag.n_all"
-path = "n_questions.all"
-row = "Questions in the [answer key](docs/glossary.md#answer-key)"
-decimals = 0
-
-# List items in a JSON path (ADR 0008): results.6 is whole pages + dense search,
-# results.8 whole pages + hybrid, results.2 fixed chunks + hybrid.
-[[project.number]]
-id = "bank_filings_rag.dense_pages_hit5"
-path = "results.6.verified.hit_at_k.value"
-row = "hit@5, whole pages + dense, 12 questions, with its 95% interval"
-decimals = 2
-
-[[project.number]]
-id = "bank_filings_rag.dense_pages_hit5_lo"
-path = "results.6.verified.hit_at_k.ci_low"
-row = "hit@5, whole pages + dense, 12 questions, with its 95% interval"
-decimals = 2
-
-[[project.number]]
-id = "bank_filings_rag.dense_pages_hit5_hi"
-path = "results.6.verified.hit_at_k.ci_high"
-row = "hit@5, whole pages + dense, 12 questions, with its 95% interval"
-decimals = 2
-
-[[project.number]]
-id = "bank_filings_rag.all30_hybrid_pages_hit5"
-path = "results.8.all.hit_at_k.value"
-row = "hit@5, whole pages + hybrid, all 30 questions"
-decimals = 2
-
-[[project.number]]
-id = "bank_filings_rag.all30_hybrid_chunks_hit5"
-path = "results.2.all.hit_at_k.value"
-row = "hit@5, fixed chunks + hybrid, all 30 questions"
-decimals = 2
-
-# Row entries: the Source is a Markdown report or code (ADR 0002, ADR 0008).
-[[project.row_number]]
-id = "bank_filings_rag.n_script_only"
-row = "Questions checked by script only (30 rows minus the 12 marked `hand`)"
-index = 0
-
-[[project.row_number]]
-id = "bank_filings_rag.chunk_words"
-row = "Fixed-chunk size, in words"
-index = 0
-
-[[project.row_number]]
-id = "bank_filings_rag.word_piece_limit"
-row = "[Embedding](docs/glossary.md#embedding) model's word-piece limit"
-index = 0
-
-[[project.row_number]]
-id = "bank_filings_rag.median_word_pieces"
-row = "Median word pieces per page (980.5, rounded)"
-index = 0
-
-[[project.row_number]]
-id = "bank_filings_rag.share_over_limit"
-row = "Pages longer than the word-piece limit"
-index = 0
-
-[[project]]
 repo = "second-look"
-kind = "tool"
+kind = "other"
 live_url = "https://iliya-valizadeh.github.io/second-look/"
 metrics_file = "reports/metrics.json"
 title = "second-look"
-tags = ["Python", "Pyodide", "Runs in the browser", "Evaluation"]
 summary = """
-Reads a bank or card statement in your browser and flags charges worth a second look:
-subscriptions, price rises, double charges and odd spending. Each flag comes with one
-plain sentence, and nothing is uploaded. The live page scores
-{{ second_look.lighthouse_performance }} for performance and
-{{ second_look.lighthouse_accessibility }} for accessibility in Lighthouse (mobile
-setting, first screen only).
+Reads a bank or card statement in your browser and flags charges worth a second look.
+Nothing is uploaded, and so far I have tested it on synthetic statements only.
+{{ second_look.failure_bar_passed }}
 """
-finding = "{{ second_look.failure_bar_passed }}"
-headline = """
-Share of planted recurring charges it finds
-([recall](https://github.com/Iliya-Valizadeh/second-look/blob/main/docs/glossary.md#recall)),
-on synthetic statements only: {{ second_look.recurring_recall }}
-({{ second_look.interval_level }} interval {{ second_look.recurring_recall_lo }} to
-{{ second_look.recurring_recall_hi }}), against {{ second_look.baseline_recurring_recall }}
-for a simple baseline.
-"""
-metric = "second_look.recurring_recall"
-metric_label = "recurring recall, synthetic statements"
+page = "for-everyone/second-look.html"
 
 [[project.flag]]
 id = "second_look.failure_bar_passed"
@@ -642,9 +669,25 @@ row = "Lighthouse scores on the live page, mobile setting, first screen only: pe
 decimals = 0
 
 [[project]]
-repo = "ds-project-standard"
-kind = "standard"
+repo = "household-credit-stress"
+kind = "other"
 metrics = false
+title = "household-credit-stress"
+summary = """
+A stress test for Canadian mortgage arrears. It forecasts each month before the
+official numbers come out, then grades its own forecasts in public. None of them has
+been checked yet.
+"""
+
+[[project]]
+repo = "ds-project-standard"
+kind = "other"
+metrics = false
+title = "ds-project-standard"
+summary = """
+The template every project above starts from. It gives each repo the same docs, tests
+and checks, and a build stops when a number has no source or a link is broken.
+"""
 
 [[project]]
 repo = ".github"

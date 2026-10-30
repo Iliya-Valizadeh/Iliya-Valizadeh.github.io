@@ -37,8 +37,8 @@ def test_home_page_has_no_unfilled_placeholder(built_site: Path) -> None:
 @pytest.mark.parametrize(
     ("page", "sections"),
     [
-        ("index.html", ("risk", "fit", "work", "contact")),
-        ("about.html", ("about", "now", "contact")),
+        ("index.html", ("intro", "projects", "other-projects", "about", "contact")),
+        ("about.html", ("about", "contact")),
     ],
 )
 def test_each_page_has_its_sections(built_site: Path, page: str, sections: tuple[str, ...]) -> None:
@@ -58,7 +58,8 @@ def test_verification_file_is_copied_byte_for_byte(built_site: Path) -> None:
 
 def test_static_is_copied(built_site: Path) -> None:
     assert (built_site / "static" / "style.css").is_file()
-    assert (built_site / "static" / "main.js").is_file()
+    for chart in ("bank-filings-rag-hit-at-5.png", "credit-risk-scorecard-calibration.png"):
+        assert (built_site / "static" / "charts" / chart).is_file()
     built_css = (built_site / "static" / "style.css").read_text(encoding="utf-8")
     source_css = (ROOT / "static" / "style.css").read_text(encoding="utf-8")
     assert built_css == source_css
@@ -70,7 +71,16 @@ def test_sources_json_records_a_commit_per_metrics_bearing_repo(built_site: Path
         "credit-risk-scorecard": "35a17fd2454ced157bdab00dc6b0301e67893240",
         "bank-filings-rag": "45246f8af21e907912d5611ccadb9158315255a3",
         "second-look": "0da821d9af2c15782d4e60abfd54572c1d34d0be",
+        "nyc-rideshare-congestion": "716ff09fb8cae82db31ae9c9cb8a5671a5bf092d",
     }
+
+
+def test_pages_load_no_script_and_no_outside_font(built_site: Path) -> None:
+    # ADR 0015: plain pages, system fonts, no script and no third-party font host.
+    for path in built_site.rglob("*.html"):
+        html = path.read_text(encoding="utf-8")
+        assert "<script" not in html, path
+        assert "fonts.googleapis" not in html, path
 
 
 def test_unknown_placeholder_fails_the_build() -> None:

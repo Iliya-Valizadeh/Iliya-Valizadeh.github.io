@@ -1,13 +1,11 @@
-<section id="case"><div class="wrap">
-  <div class="head rv"><div class="num">{{ page_label }}</div>
-    <div><h1 class="ctitle">{{ project_title }}</h1>
-    <div class="sub">{{ lede }}</div>
-    <p class="plinks">{{ project_links }}</p></div></div>
-  <div class="case rv">
+<article id="case">
+<h1>{{ project_title }}</h1>
+{{ lede }}
+<p>{{ project_links }}</p>
 {{ main }}
-    <aside class="weak" aria-labelledby="weak-title"><h2 id="weak-title">What's weak</h2>
+<section class="weak" aria-labelledby="weak-title">
+<h2 id="weak-title">What's weak</h2>
 {{ weak }}
-    </aside>
+</section>
 {{ next }}
-  </div>
-</div></section>
+</article>

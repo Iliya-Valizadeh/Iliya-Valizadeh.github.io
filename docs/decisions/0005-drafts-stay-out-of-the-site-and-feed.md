@@ -4,7 +4,7 @@ Date: 2026-09-26. Status: accepted.
 
 ## Context
 
-Plan section `5.7` asks for three short notes in Iliya's voice. Each starts with the
+Plan section `5.7` asks for three short notes in my own voice. Each starts with the
 line `DRAFT: Iliya to edit` and must not be published until he removes that line
 himself. The site also has an RSS feed, and the profile lists published notes. A draft
 must not leak through any of these.
@@ -41,8 +41,8 @@ What the build does with a draft:
 
 Publishing a note:
 
-- Iliya deletes the marker line and adds a line `Published: YYYY-MM-DD` with the date
-  he chooses. The build never makes up a date. A note without the marker and without a
+- I delete the marker line and add a line `Published: YYYY-MM-DD` with the date
+  I choose. The build never makes up a date. A note without the marker and without a
   valid `Published:` line fails the build.
 - The next deploy (on push, or the daily run) publishes it. The profile picks it up
   from `notes.json` on its next daily sync.
@@ -61,7 +61,7 @@ three real notes still drafts, a test checks that the built Notes page shows the
 
 ## Consequences
 
-- Iliya controls publication with one line per note.
+- I control publication with one line per note.
 - A draft cannot reach the live site, the feed or the profile, even by mistake in a
   template, because the final scan of `_site/` catches the marker.
-- Drafts are still checked, so what he edits is already clean.
+- Drafts are still checked, so what I edit is already clean.

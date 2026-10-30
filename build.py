@@ -6,8 +6,9 @@ Per docs/decisions/0001-a-small-python-build-deployed-by-actions.md,
 docs/decisions/0007-home-and-about-pages.md and docs/decisions/0008-project-pages.md:
 
 - `templates/page.html` is the shell every page shares. `partials/*.html` are the
-  blocks a page is made of. Both hold markup and short labels only. The About section
-  and the two demos are kept word for word from the old page (ADR 0006).
+  blocks a page is made of. Both hold markup and short labels only. The About
+  paragraphs are kept word for word from the old page (ADR 0006, ADR 0015). The pages
+  are one plain column with no script (ADR 0015).
 - Prose lives in `content/*.md` (one file per page, split into named slots by
   `<!-- slot: name -->` lines) and in the card fields of `projects.toml`. It is
   Markdown, turned into HTML with markdown-it-py.
@@ -16,11 +17,11 @@ docs/decisions/0007-home-and-about-pages.md and docs/decisions/0008-project-page
   own `CLAIMS.md` (ADR 0002). A sentence that uses a number measured on synthetic
   data must say "synthetic". A `[[project.flag]]` turns a true/false value in
   `metrics.json` into one of two sentences.
-- The Home project list is a loop over `projects.toml`: every `work` entry, then
-  every `tool` entry. `standard` entries get no card (ADR 0003).
-- Every `work` project gets a case study at `projects/<repo>.html`, and every `tool`
-  a "For everyone" page at `for-everyone/<repo>.html`, both from
-  `content/projects/<repo>.md` (ADR 0008).
+- The Home project list is a loop over `projects.toml` (ADR 0015): every `featured`
+  entry, with its chart and result sentence, then every `other` entry as one short
+  item. `standard` entries are not listed.
+- A project with a `page` gets that page, built from `content/projects/<repo>.md`
+  (ADR 0008).
 - Beyond the shared code, a number may come from a second results file, from a list
   item in a JSON path, from a Value cell with thousands commas, or, as a row entry,
   from the Value cell itself when its Source is not a JSON file (ADR 0008).
@@ -107,12 +108,10 @@ SENTENCE_END_RE = re.compile(r"(?<=[.!?])\s+")
 # Otherwise it reads a cell the way the shared VALUE_NUMBER_RE does.
 CELL_NUMBER_RE = re.compile(r"(?:(?<![\d.])-)?(?:\d{1,3}(?:,\d{3})+(?!\d)|\d+)(?:\.\d+)?%?")
 
-KINDS = ("work", "tool", "standard")
-CARD_KINDS = ("work", "tool")
-# Where each kind's page goes, and the words that name it (ADR 0008).
-PAGE_DIRS = {"work": "projects", "tool": "for-everyone"}
-PAGE_LABELS = {"work": "CASE STUDY", "tool": "FOR EVERYONE"}
-PAGE_LINK_TEXT = {"work": "Read the case study", "tool": "What it does, for everyone"}
+KINDS = ("featured", "other", "standard")
+CHART_FIELDS = ("chart", "chart_source", "chart_alt", "chart_caption")
+CHARTS_DIR = STATIC_DIR / "charts"
+PAGE_RE = re.compile(r"^[a-z0-9-]+/[a-z0-9.-]+\.html$")
 
 MARKDOWN = MarkdownIt("commonmark").enable("table")
 
@@ -128,30 +127,13 @@ class Page:
     output: str
     content: str
     partials: tuple[str, ...]
-    script: str
-    home: str
-    contact_label: str
     root: str = ""
     project: SiteProject | None = None
 
 
 PAGES = (
-    Page(
-        output="index.html",
-        content="home.md",
-        partials=("nav", "hero", "ticker", "risk", "fit", "work", "contact"),
-        script="main.js",
-        home="",
-        contact_label="04 / CONTACT",
-    ),
-    Page(
-        output="about.html",
-        content="about.md",
-        partials=("nav", "about", "now", "contact"),
-        script="site.js",
-        home="index.html",
-        contact_label="06 / CONTACT",
-    ),
+    Page(output="index.html", content="home.md", partials=("nav", "home", "contact")),
+    Page(output="about.html", content="about.md", partials=("nav", "about", "contact")),
 )
 
 
@@ -182,12 +164,14 @@ class SiteProject:
     repo: str
     kind: str
     title: str = ""
-    tags: tuple[str, ...] = ()
+    about: str = ""
+    result: str = ""
     summary: str = ""
-    finding: str = ""
-    headline: str = ""
-    metric: str = ""
-    metric_label: str = ""
+    chart: str = ""
+    chart_source: str = ""
+    chart_alt: str = ""
+    chart_caption: str = ""
+    page: str = ""
     live_url: str = ""
     flags: tuple[Flag, ...] = ()
     number_files: tuple[tuple[str, str], ...] = ()
@@ -228,30 +212,42 @@ def load_site_projects(path: Path) -> list[SiteProject]:
                 raise BuildError(f"{repo}: row_number {r.get('id')!r} needs an index of 0 or more")
             synthetic = bool(r.get("synthetic", False))
             row_numbers.append(RowNumber(r["id"], r["row"], index, synthetic))
+        text = {
+            key: p.get(key, "")
+            for key in ("title", "about", "result", "summary", "page", "live_url", *CHART_FIELDS)
+        }
         project = SiteProject(
             repo=repo,
             kind=kind,
-            title=p.get("title", ""),
-            tags=tuple(p.get("tags", [])),
-            summary=p.get("summary", ""),
-            finding=p.get("finding", ""),
-            headline=p.get("headline", ""),
-            metric=p.get("metric", ""),
-            metric_label=p.get("metric_label", ""),
-            live_url=p.get("live_url", ""),
             flags=flags,
             number_files=number_files,
             row_numbers=tuple(row_numbers),
+            **text,
         )
-        if kind in CARD_KINDS and not (project.title and project.summary):
-            raise BuildError(f"{repo}: a {kind} project needs a title and a summary")
-        has_numbers = project.metric or project.flags or project.row_numbers
-        if kind == "standard" and (project.title or has_numbers):
-            raise BuildError(f"{repo}: a standard repo gets no card, number or flag (ADR 0003)")
-        if bool(project.metric) != bool(project.metric_label):
-            raise BuildError(f"{repo}: metric and metric_label go together")
+        check_site_project(project)
         projects.append(project)
     return projects
+
+
+def check_site_project(project: SiteProject) -> None:
+    """The rules of ADR 0015 for one entry's own fields."""
+    repo, kind = project.repo, project.kind
+    if kind == "featured" and not (project.title and project.result):
+        raise BuildError(f"{repo}: a featured project needs a title and a result")
+    if kind == "other" and not (project.title and project.summary):
+        raise BuildError(f"{repo}: an other project needs a title and a summary")
+    has_numbers = project.flags or project.row_numbers
+    if kind == "standard" and (project.title or project.page or has_numbers):
+        raise BuildError(f"{repo}: a standard repo gets no entry, page, number or flag")
+    charts = [bool(getattr(project, f)) for f in CHART_FIELDS]
+    if any(charts) and not all(charts):
+        raise BuildError(f"{repo}: {', '.join(CHART_FIELDS)} go together")
+    if project.chart and kind != "featured":
+        raise BuildError(f"{repo}: only a featured project shows a chart")
+    if project.chart and not (CHARTS_DIR / project.chart).is_file():
+        raise BuildError(f"{repo}: chart file not found: static/charts/{project.chart}")
+    if project.page and not PAGE_RE.match(project.page):
+        raise BuildError(f"{repo}: page must look like 'folder/name.html', not {project.page!r}")
 
 
 # ---------------------------------------------------------------------------- numbers
@@ -479,62 +475,81 @@ def repo_url(repo: str) -> str:
     return f"https://github.com/{GITHUB_USER}/{repo}"
 
 
-def project_card(
-    index: int, project: SiteProject, numbers: Numbers, flags: dict[str, Flag]
+def png_size(path: Path) -> tuple[int, int]:
+    """Width and height of a PNG, read from its header, so the page can reserve room."""
+    head = path.read_bytes()[:24]
+    if head[:8] != b"\x89PNG\r\n\x1a\n" or head[12:16] != b"IHDR":
+        raise BuildError(f"{path}: not a PNG file")
+    return int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big")
+
+
+def inline_html(text: str) -> str:
+    """One piece of Markdown as inline HTML, with its line breaks joined."""
+    rendered: str = MARKDOWN.renderInline(" ".join(text.split()))
+    return rendered
+
+
+def featured_entry(
+    project: SiteProject, numbers: Numbers, flags: dict[str, Flag]
 ) -> tuple[str, str]:
-    """One Home card as HTML, and the same prose as Markdown for the checks."""
+    """One featured project on Home as HTML, and its prose as Markdown for the checks."""
     where = f"projects.toml ({project.repo})"
-    texts = [
-        fill_text(t.strip(), numbers, flags, where)
-        for t in (project.summary, project.finding, project.headline)
-        if t.strip()
-    ]
-    body = "\n".join(markdown_html(t) for t in texts)
-
-    metric_html = ""
-    metric_md = ""
-    if project.metric:
-        if project.metric not in numbers.values:
-            raise BuildError(f"{where}: metric '{project.metric}' is not a number in the config")
-        is_synthetic = project.metric in numbers.synthetic
-        if is_synthetic and "synthetic" not in project.metric_label.lower():
-            raise BuildError(f"{where}: metric_label must say 'synthetic'")
-        value = numbers.values[project.metric]
-        label = html.escape(project.metric_label)
-        metric_html = f'<div class="pmetric"><b>{value}</b><span>{label}</span></div>'
-        metric_md = f"Headline number, {project.metric_label}: {value}."
-
-    tags = "".join(f'<span class="tag2">{html.escape(t)}</span>' for t in project.tags)
     url = repo_url(project.repo)
-    links = [
-        f'<a href="{page_path(project)}">{PAGE_LINK_TEXT[project.kind]}</a>',
-        f'<a href="{url}" target="_blank" rel="noopener">Code and write-up</a>',
-    ]
+    about = fill_text(project.about.strip(), numbers, flags, where)
+    result = fill_text(project.result.strip(), numbers, flags, where)
+    parts = [f'<h3><a href="{url}">{html.escape(project.title)}</a></h3>']
+    md = [f"### {project.title}"]
+    if about:
+        parts.append(f"<p>{inline_html(about)}</p>")
+        md.append(about)
+    parts.append(f"<p>{inline_html(result)}</p>")
+    md.append(result)
+    if project.chart:
+        caption = fill_text(project.chart_caption.strip(), numbers, flags, where)
+        width, height = png_size(CHARTS_DIR / project.chart)
+        source = f"{url}/blob/main/{project.chart_source}"
+        parts.append(
+            "<figure>\n"
+            f'<img src="static/charts/{html.escape(project.chart, quote=True)}" '
+            f'alt="{html.escape(project.chart_alt, quote=True)}" '
+            f'width="{width}" height="{height}" loading="lazy">\n'
+            f"<figcaption>{inline_html(caption)} Chart from "
+            f'<a href="{source}"><code>{html.escape(project.chart_source)}</code></a>.'
+            "</figcaption>\n</figure>"
+        )
+        md += [f"Chart: {project.chart_alt}", caption]
+    if project.page:
+        parts.append(f'<p><a href="{project.page}">Project page for {project.title}</a></p>')
+    entry = f'<article class="project" id="{project.repo}">\n' + "\n".join(parts) + "\n</article>"
+    return entry, "\n\n".join(md)
+
+
+def other_entry(project: SiteProject, numbers: Numbers, flags: dict[str, Flag]) -> tuple[str, str]:
+    """One short item in the Home list of other projects, as HTML and as Markdown."""
+    where = f"projects.toml ({project.repo})"
+    summary = fill_text(project.summary.strip(), numbers, flags, where)
+    links = []
     if project.live_url:
-        live = html.escape(project.live_url, quote=True)
-        links.append(f'<a href="{live}" target="_blank" rel="noopener">Try it live</a>')
-    title = html.escape(project.title)
-    card = (
-        f'<article class="proj" id="{html.escape(project.repo, quote=True)}">\n'
-        f'  <div class="pnum">{index:02d}</div>\n'
-        f'  <div><h3><a href="{url}" target="_blank" rel="noopener">{title}</a></h3>\n'
-        f"{body}\n"
-        f'    <div class="tags">{tags}</div>\n'
-        f'    <p class="plinks">{"".join(links)}</p></div>\n'
-        f"  {metric_html}\n"
-        f"</article>"
-    )
-    md = "\n\n".join([f"### {project.title}", *texts] + ([metric_md] if metric_md else []))
-    return card, md
+        links.append(f'<a href="{html.escape(project.live_url, quote=True)}">try it live</a>')
+    if project.page:
+        links.append(f'<a href="{project.page}">project page</a>')
+    more = f" ({', '.join(links)})" if links else ""
+    title = f'<a href="{repo_url(project.repo)}">{html.escape(project.title)}</a>'
+    item = f'<li id="{project.repo}">{title}: {inline_html(summary)}{more}</li>'
+    return item, f"- {project.title}: {' '.join(summary.split())}"
 
 
-def project_cards(
+def project_lists(
     site: list[SiteProject], numbers: Numbers, flags: dict[str, Flag]
-) -> tuple[str, str]:
-    """Every work project, then every public tool, in config order (ADR 0003)."""
-    ordered = [p for kind in CARD_KINDS for p in site if p.kind == kind]
-    built = [project_card(i, p, numbers, flags) for i, p in enumerate(ordered, start=1)]
-    return "\n".join(c for c, _ in built), "\n\n".join(m for _, m in built)
+) -> dict[str, str]:
+    """The featured entries and the list of other projects, in config order (ADR 0015)."""
+    featured = [featured_entry(p, numbers, flags) for p in site if p.kind == "featured"]
+    others = [other_entry(p, numbers, flags) for p in site if p.kind == "other"]
+    return {
+        "featured": "\n".join(h for h, _ in featured),
+        "others": '<ul class="others">\n' + "\n".join(h for h, _ in others) + "\n</ul>",
+        "projects_md": "\n\n".join([*(m for _, m in featured), "\n".join(m for _, m in others)]),
+    }
 
 
 # ---------------------------------------------------------------------------- pages
@@ -563,40 +578,30 @@ def render_template(template_text: str, context: dict[str, str]) -> str:
     return PLACEHOLDER_RE.sub(replace, template_text)
 
 
-def page_path(project: SiteProject) -> str:
-    """Where a work or tool project's own page is built, relative to the site root."""
-    return f"{PAGE_DIRS[project.kind]}/{project.repo}.html"
-
-
 def project_pages(site: list[SiteProject]) -> list[Page]:
-    """One page per work project, then per tool, in config order (ADR 0008)."""
-    ordered = [p for kind in CARD_KINDS for p in site if p.kind == kind]
+    """One page per project that sets `page`, in config order (ADR 0008, ADR 0015)."""
     return [
         Page(
-            output=page_path(p),
+            output=p.page,
             content=f"projects/{p.repo}.md",
             partials=("nav", "project", "contact"),
-            script="site.js",
-            home="../index.html",
-            contact_label="02 / CONTACT",
             root="../",
             project=p,
         )
-        for p in ordered
+        for p in site
+        if p.page
     ]
 
 
 def project_context(project: SiteProject) -> dict[str, str]:
-    """The labels and links a project page shows around its prose."""
-    url = repo_url(project.repo)
-    links = [f'<a href="{url}" target="_blank" rel="noopener">Code and full write-up</a>']
+    """The title and links a project page shows around its prose."""
+    links = [f'<a href="{repo_url(project.repo)}">Code and full write-up on GitHub</a>']
     if project.live_url:
         live = html.escape(project.live_url, quote=True)
-        links.insert(0, f'<a href="{live}" target="_blank" rel="noopener">Try it live</a>')
+        links.insert(0, f'<a href="{live}">Try it live</a>')
     return {
-        "page_label": f"01 / {PAGE_LABELS[project.kind]}",
         "project_title": html.escape(project.title),
-        "project_links": "".join(links),
+        "project_links": " | ".join(links),
     }
 
 
@@ -624,10 +629,7 @@ def build_page(
 
     context = {name: markdown_html(text) for name, text in filled.items()}
     context.update(
-        home=page.home,
         root=page.root,
-        contact_label=page.contact_label,
-        script=f"{page.root}static/{page.script}",
         page_title=html.escape(front["title"]),
         page_description=html.escape(front["description"], quote=True),
         page_url=page_url(page.output),
@@ -637,17 +639,22 @@ def build_page(
         context.update(project_context(page.project))
     md_parts = [f"Page title: {front['title']}.", front["description"], *filled.values()]
     if "notes" in page.partials:
-        context["page_label"] = "01 / NOTES"
         list_html, list_md = notes_list(notes or [])
         if list_html:
             context["note_list"] = list_html
             md_parts.append(list_md)
         else:
             context["note_list"] = context["empty"]
-    if "work" in page.partials:
-        cards_html, cards_md = project_cards(site, numbers, flags)
-        context["project_cards"] = cards_html
-        md_parts.append(cards_md)
+    if "home" in page.partials:
+        lists = project_lists(site, numbers, flags)
+        context.update(featured=lists["featured"], others=lists["others"])
+        md_parts.append(lists["projects_md"])
+        # The Notes index is linked from Home only once a note is published (ADR 0015).
+        context["notes_link"] = (
+            '<p>I also write short <a href="notes/index.html">notes</a> on what I find.</p>'
+            if published_notes(notes or [])
+            else ""
+        )
 
     parts_html = [render_template(load_partial(name), context) for name in page.partials]
     # The nav stays outside <main>, so the skip link and screen readers can jump past it.
@@ -904,21 +911,19 @@ def build_note(path: Path, numbers: Numbers, flags: dict[str, Flag]) -> Note:
     body_html, body_md = note_body(fill_text(body, numbers, flags, where), numbers, where)
     title = html.escape(front["title"])
     context = {
-        "home": "../index.html",
         "root": "../",
-        "contact_label": "02 / CONTACT",
-        "script": "../static/site.js",
         "page_title": f"{title} | Iliya Valizadeh",
         "page_description": html.escape(front["description"], quote=True),
         "page_url": page_url(f"notes/{path.stem}.html"),
         "og_type": "article",
-        "page_label": "01 / NOTE",
         "note_title": title,
         "note_status": f"Published {published}" if published else "Draft, not published",
         "note_body": body_html,
     }
-    parts = ("nav", "note", "contact")
-    context["body"] = "\n\n".join(render_template(load_partial(n), context) for n in parts)
+    nav, note, contact = (
+        render_template(load_partial(n), context) for n in ("nav", "note", "contact")
+    )
+    context["body"] = f'{nav}\n\n<main id="main" tabindex="-1">\n{note}\n\n{contact}\n</main>'
     shell = (TEMPLATES_DIR / "page.html").read_text(encoding="utf-8")
     rendered = render_template(shell, context)
     if "{{" in rendered:
@@ -984,9 +989,6 @@ NOTES_PAGE = Page(
     output="notes/index.html",
     content="notes.md",
     partials=("nav", "notes", "contact"),
-    script="site.js",
-    home="../index.html",
-    contact_label="02 / CONTACT",
     root="../",
 )
 
