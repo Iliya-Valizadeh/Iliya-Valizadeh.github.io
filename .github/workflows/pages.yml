@@ -83,7 +83,7 @@ jobs:
         run: uv run pytest tests/test_vendored_tools.py tests/test_shared_numbers.py --no-cov
 
       - name: Writing-style check (zero flags)
-        run: uv run python tools/ai_signs_check.py README.md docs _build/md CLAIMS.md
+        run: uv run python tools/writing_style_check.py README.md docs _build/md CLAIMS.md
         env:
           PYTHONPATH: tools
 

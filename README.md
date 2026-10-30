@@ -28,7 +28,7 @@ Drop `--offline` to read the live results files from GitHub instead. That is wha
 - ruff for lint and format, and mypy for types
 - pytest, with the coverage floor set in `pyproject.toml`, measured on `build.py` and `scripts/`
 - the offline build
-- the writing-style check (`tools/ai_signs_check.py`), with zero flags allowed
+- the writing-style check (`tools/writing_style_check.py`), with zero flags allowed
 - the readability check, with notes and the "For everyone" pages held to the plain limit and the rest to the general limit set in ADR 0004
 - the numbers check, which fails if any page holds a number the build did not fill in from a results file
 - the claims check and the local link check
