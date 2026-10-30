@@ -61,7 +61,7 @@ def test_each_page_links_back_from_its_folder(built: tuple[Path, Path], repo: st
     assert "<script" not in html
     assert 'href="../about.html"' in html
     assert 'href="../index.html#projects"' in html
-    assert 'href="../resume.pdf">Resume (PDF)</a>' in html
+    assert 'href="../static/resume.pdf">Resume (PDF)</a>' in html
     assert f'href="https://github.com/Iliya-Valizadeh/{repo}"' in html
 
 
