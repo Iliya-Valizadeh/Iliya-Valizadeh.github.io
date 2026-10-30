@@ -1,6 +1,6 @@
 # 0007: The Home and About pages
 
-Date: 2026-09-28. Status: accepted.
+Date: 2026-09-28. Status: accepted, then partly replaced by [ADR 0015](0015-one-plain-column.md). <!-- not-a-claim -->
 
 ## Context
 

@@ -1,6 +1,6 @@
 # 0013: Accessibility, dark mode and how Lighthouse is run <!-- not-a-claim -->
 
-Date: 2026-10-20. Status: accepted.
+Date: 2026-10-20. Status: accepted, then partly replaced by [ADR 0015](0015-one-plain-column.md). <!-- not-a-claim -->
 
 ## Context
 
@@ -60,7 +60,7 @@ How Lighthouse is run:
   through `npx` on every built page. Each page gets a mobile run, a desktop run and an
   accessibility-only run with Chrome forced into dark mode.
 - It writes `reports/lighthouse.json` and copies only what Lighthouse printed. The
-  pure parts (reading a score, taking the lowest, the 90 line) have tests. The part
+  pure parts (reading a score, taking the lowest, the 90 line) have tests. The part <!-- not-a-claim -->
   that starts Chrome does not, and is not run in CI, which has no Chrome set up.
   <!-- not-a-claim -->
 - On Windows, Lighthouse often prints an `EPERM` error when it deletes its own temp
@@ -75,7 +75,7 @@ How Lighthouse is run:
   performance score fell under the line on some runs. I have not run Lighthouse on the
   live site.
 - Mobile performance is a simulated score and moves by a point or two between runs.
-  Its lowest value sits at the 90 line, so a later run may read just under it. That is
+  Its lowest value sits at the 90 line, so a later run may read just under it. That is <!-- not-a-claim -->
   noise to watch, not a reason to loosen the check. <!-- not-a-claim -->
 - I also looked at screenshots of the dark and phone layouts by hand. Those are not
   saved in the repo.
