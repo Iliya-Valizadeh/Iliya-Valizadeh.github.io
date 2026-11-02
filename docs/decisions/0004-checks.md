@@ -28,7 +28,7 @@ For the checkers:
 ## Decision
 
 Checkers: option 3. These files are copied byte for byte from `ds-project-standard` at
-commit `338cfd4ce69dd72aac64ed366678f6a3c10e7d81`: `tools/_markdown.py`,
+commit `f6434efe38b629f0ab711c1261fa290ee3a1f4cf`: `tools/_markdown.py`,
 `tools/writing_style_check.py`, `tools/readability_check.py`, `tools/claims_check.py`,
 `tools/links_check.py` and `tools/lychee.toml`. `tools/readme_sections.py` is not
 copied, because no file here uses the project README layout. `tools/SOURCE.json`
@@ -62,7 +62,7 @@ Tests that are specific to this site, all offline:
   ([ADR 0005](0005-drafts-stay-out-of-the-site-and-feed.md)).
 - Verification file: `_site/googleb968c9a0c91c49c6.html` has the SHA-256
   `6aeaef4372c8319c6cb681646cad909eac9f38c37143c932edf74a4688cd57ef`, the same as the
-  file at commit `efa1a03`.
+  file at commit `dd89d11`.
 - Kept text: the About section and the two demos match the archived page
   ([ADR 0006](0006-text-kept-word-for-word-and-the-old-page.md)).
 - Hack the North guard: the regular expression `hack\W*the\W*north`, ignoring case,

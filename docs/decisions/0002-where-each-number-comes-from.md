@@ -103,5 +103,5 @@ and the SHA-256 of each file. A test fails if a copy is edited here.
 - A renamed row in a source repo stops the site from deploying until a person updates
   `projects.toml`. That is on purpose.
 - Offline tests use copies of the source files recorded in `tests/fixtures/SOURCES.md`:
-  `credit-risk-scorecard` at `35a17fd`, `bank-filings-rag` at `45246f8`, `second-look`
-  at `0da821d`.
+  `credit-risk-scorecard` at `b963859`, `bank-filings-rag` at `2225483`, `second-look`
+  at `4a53ecf`.
